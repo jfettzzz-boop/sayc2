@@ -18,6 +18,7 @@ export class AppComponent implements OnInit {
   protected readonly appPages = [
     { title: 'titles.dashboard', url: '/folder/Home', icon: 'home' },
     { title: 'admin.users_tab', url: '/folder/Users', icon: 'person-circle' },
+    { title: 'navigation.searchProducts', url: '/food-search', icon: 'search' },
   ];
   protected readonly labels = ['Extra'];
   

@@ -42,7 +42,8 @@
         "user_management": "Gestión de usuarios",
         "stats": "Estadísticas",
         "database_explorer": "Explorador",
-        "admin_group": "Administración"
+        "admin_group": "Administración",
+        "searchProducts" : "Buscar productos"
     },
     "stats": {
         "title": "Estadísticas de participación",

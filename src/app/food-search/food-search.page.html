@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Buscador de Alimentos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-searchbar 
+    [(ngModel)]="searchTerm" 
+    (ionChange)="searchProducts()" 
+    placeholder="Busca por chocolate, leche, pan..."
+    debounce="400">
+  </ion-searchbar>
+
+  @if (isLoading) {
+    <div class="ion-text-center ion-padding">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Buscando en Open Food Facts...</p>
+    </div>
+  }
+
+  @if (hasError && !isLoading) {
+    <div class="ion-text-center ion-padding" color="danger">
+      <p style="color: var(--ion-color-danger);">Hubo un problema de conexión con el servidor. Inténtalo de nuevo.</p>
+    </div>
+  }
+
+  @if (!isLoading && !hasError && products.length > 0) {
+    <ion-list>
+      @for (product of products; track product.id || product._id || product.code) {
+        <ion-item lines="inset">
+          <ion-thumbnail slot="start">
+            @if (product.image_front_small_url) {
+              <img [src]="product.image_front_small_url" [alt]="product.product_name" />
+            } @else {
+              <div class="no-image">Sin img</div>
+            }
+          </ion-thumbnail>
+          <ion-label>
+            <h2>{{ product.product_name || 'Producto sin nombre' }}</h2>
+            <p><strong>Marca:</strong> {{ product.brands || 'Desconocida' }}</p>
+            <ion-note color="medium">Cantidad: {{ product.quantity || 'N/D' }}</ion-note>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  }
+
+  @if (!isLoading && !hasError && hasSearched && products.length === 0) {
+    <div class="ion-text-center ion-padding">
+      <p>No se encontraron productos con ese término.</p>
+    </div>
+  }
+</ion-content>
