@@ -2,21 +2,98 @@
   <ion-split-pane contentId="main-content">
     <ion-menu contentId="main-content" type="overlay">
       <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header>Inbox</ion-list-header>
-          <ion-note>hi&#64;ionicframework.com</ion-note>
+        <div class="menu-container">
 
-          @for (p of appPages; track p; let i = $index) {
-            <ion-menu-toggle auto-hide="false">
-              <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
-                <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
-                <ion-label>{{ p.title }}</ion-label>
+          <div class="menu-top">
+            <ion-list id="inbox-list">
+              <ion-list-header>SAYC</ion-list-header>
+              <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
+
+              @for (p of appPages; track p; let i = $index) {
+              <ion-menu-toggle auto-hide="false">
+                <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false"
+                  routerLinkActive="selected">
+                  <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'"
+                    [md]="p.icon + '-sharp'"></ion-icon>
+
+                  <ion-label>{{ p.title | translate }}</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+              }
+            </ion-list>
+          </div>
+
+          <div class="menu-footer">
+            <!-- Language selector -->
+            <ion-list id="labels-list">
+              <!-- Botón principal que despliega/contrae -->
+              <ion-item lines="none" button (click)="toggleLanguageMenu()">
+                <ion-icon aria-hidden="true" slot="start" name="language-outline"></ion-icon>
+                <ion-label>{{ 'lang' | translate }}</ion-label>
+                <ion-icon aria-hidden="true" slot="end"
+                  [name]="showLanguageMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
               </ion-item>
-            </ion-menu-toggle>
-          }
-        </ion-list>
 
-        <ion-list id="labels-list">
+              <!-- Options -->
+              @if (showLanguageMenu) {
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="changeLanguage('es')" class="sub-lang-item">
+                  <ion-label>Español (ES)</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="changeLanguage('en')" class="sub-lang-item">
+                  <ion-label>English (EN)</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="changeLanguage('fr')" class="sub-lang-item">
+                  <ion-label>Français (FR)</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+              }
+            </ion-list>
+
+            <!-- Theme selector -->
+            <ion-list id="labels-list">
+              <ion-item lines="none" button (click)="toggleThemeMenu()">
+                <ion-icon aria-hidden="true" slot="start" name="color-palette-outline"></ion-icon>
+                <ion-label>{{ 'theme' | translate }}</ion-label>
+                <ion-icon aria-hidden="true" slot="end"
+                  [name]="showThemeMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+              </ion-item>
+
+              @if (showThemeMenu) {
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="setTheme('light')" class="sub-lang-item">
+                  <ion-label>{{ 'light' | translate }}</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="setTheme('dark')" class="sub-lang-item">
+                  <ion-label>{{ 'dark' | translate }}</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="setTheme('theme-sunset')" class="sub-lang-item">
+                  <ion-label>Naranja</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+
+              <ion-menu-toggle auto-hide="false">
+                <ion-item lines="none" button (click)="setTheme('theme-emerald')" class="sub-lang-item">
+                  <ion-label>Verde</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+              }
+            </ion-list>
+          </div>
+        </div>
+        <!-- <ion-list id="labels-list">
           <ion-list-header>Labels</ion-list-header>
 
           @for (label of labels; track label) {
@@ -25,7 +102,7 @@
               <ion-label>{{ label }}</ion-label>
             </ion-item>
           }
-        </ion-list>
+        </ion-list> -->
       </ion-content>
     </ion-menu>
     <ion-router-outlet id="main-content"></ion-router-outlet>

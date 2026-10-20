@@ -5,9 +5,27 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 
+// Multilanguage
+import { provideTranslateService } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+// Multilanguage end
+
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    
+    // Multilanguage Providers
+    provideHttpClient(withInterceptorsFromDi()),
+    provideTranslateService({
+      fallbackLang: 'es',
+      loader: provideTranslateHttpLoader({
+        prefix: 'assets/i18n/',
+        suffix: '.json'
+      })
+    }),
+    // Multilanguage end
+
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
   ],
