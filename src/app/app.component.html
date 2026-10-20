@@ -1,24 +1,33 @@
 <ion-app>
   <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay">
+    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isCollapsed">
       <ion-content>
         <div class="menu-container">
 
           <div class="menu-top">
             <ion-list id="inbox-list">
-              <ion-list-header>SAYC</ion-list-header>
-              <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
-
-              @for (p of appPages; track p; let i = $index) {
-              <ion-menu-toggle auto-hide="false">
-                <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false"
-                  routerLinkActive="selected">
-                  <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'"
-                    [md]="p.icon + '-sharp'"></ion-icon>
-
-                  <ion-label>{{ p.title | translate }}</ion-label>
+              <div class="menu-header-row">
+                @if (!isCollapsed) {
+                  <ion-list-header>SAYC</ion-list-header>
+                }
+                <ion-item lines="none" button (click)="toggleCollapse()" class="collapse-item" [title]="'Toggle Menu'">
+                  <ion-icon aria-hidden="true" slot="start" name="menu-outline"></ion-icon>
                 </ion-item>
-              </ion-menu-toggle>
+              </div>
+
+              @if (!isCollapsed) {
+                <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
+              }
+              
+              @for (p of appPages; track p; let i = $index) {
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false"
+                    routerLinkActive="selected" [title]="p.title | translate">
+                    <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'"
+                      [md]="p.icon + '-sharp'"></ion-icon>
+                    <ion-label>{{ p.title | translate }}</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
               }
             </ion-list>
           </div>
@@ -26,83 +35,75 @@
           <div class="menu-footer">
             <!-- Language selector -->
             <ion-list id="labels-list">
-              <!-- Botón principal que despliega/contrae -->
-              <ion-item lines="none" button (click)="toggleLanguageMenu()">
+              <ion-item lines="none" button (click)="toggleLanguageMenu()" [title]="'lang' | translate">
                 <ion-icon aria-hidden="true" slot="start" name="language-outline"></ion-icon>
                 <ion-label>{{ 'lang' | translate }}</ion-label>
-                <ion-icon aria-hidden="true" slot="end"
-                  [name]="showLanguageMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                @if (!isCollapsed) {
+                  <ion-icon aria-hidden="true" slot="end"
+                    [name]="showLanguageMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                }
               </ion-item>
 
-              <!-- Options -->
-              @if (showLanguageMenu) {
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="changeLanguage('es')" class="sub-lang-item">
-                  <ion-label>Español (ES)</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+              @if (showLanguageMenu && !isCollapsed) {
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="changeLanguage('es')" class="sub-lang-item">
+                    <ion-label>Español (ES)</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
 
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="changeLanguage('en')" class="sub-lang-item">
-                  <ion-label>English (EN)</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="changeLanguage('en')" class="sub-lang-item">
+                    <ion-label>English (EN)</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
 
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="changeLanguage('fr')" class="sub-lang-item">
-                  <ion-label>Français (FR)</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="changeLanguage('fr')" class="sub-lang-item">
+                    <ion-label>Français (FR)</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
               }
             </ion-list>
 
             <!-- Theme selector -->
             <ion-list id="labels-list">
-              <ion-item lines="none" button (click)="toggleThemeMenu()">
+              <ion-item lines="none" button (click)="toggleThemeMenu()" [title]="'theme' | translate">
                 <ion-icon aria-hidden="true" slot="start" name="color-palette-outline"></ion-icon>
                 <ion-label>{{ 'theme' | translate }}</ion-label>
-                <ion-icon aria-hidden="true" slot="end"
-                  [name]="showThemeMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                @if (!isCollapsed) {
+                  <ion-icon aria-hidden="true" slot="end"
+                    [name]="showThemeMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                }
               </ion-item>
 
-              @if (showThemeMenu) {
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="setTheme('light')" class="sub-lang-item">
-                  <ion-label>{{ 'light' | translate }}</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+              @if (showThemeMenu && !isCollapsed) {
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="setTheme('light')" class="sub-lang-item">
+                    <ion-label>{{ 'light' | translate }}</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
 
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="setTheme('dark')" class="sub-lang-item">
-                  <ion-label>{{ 'dark' | translate }}</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="setTheme('dark')" class="sub-lang-item">
+                    <ion-label>{{ 'dark' | translate }}</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
 
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="setTheme('theme-sunset')" class="sub-lang-item">
-                  <ion-label>Naranja</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="setTheme('theme-sunset')" class="sub-lang-item">
+                    <ion-label>Naranja</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
 
-              <ion-menu-toggle auto-hide="false">
-                <ion-item lines="none" button (click)="setTheme('theme-emerald')" class="sub-lang-item">
-                  <ion-label>Verde</ion-label>
-                </ion-item>
-              </ion-menu-toggle>
+                <ion-menu-toggle auto-hide="false">
+                  <ion-item lines="none" button (click)="setTheme('theme-emerald')" class="sub-lang-item">
+                    <ion-label>Verde</ion-label>
+                  </ion-item>
+                </ion-menu-toggle>
               }
             </ion-list>
           </div>
         </div>
-        <!-- <ion-list id="labels-list">
-          <ion-list-header>Labels</ion-list-header>
-
-          @for (label of labels; track label) {
-            <ion-item lines="none">
-              <ion-icon aria-hidden="true" slot="start" ios="bookmark-outline" md="bookmark-sharp"></ion-icon>
-              <ion-label>{{ label }}</ion-label>
-            </ion-item>
-          }
-        </ion-list> -->
       </ion-content>
     </ion-menu>
     <ion-router-outlet id="main-content"></ion-router-outlet>
