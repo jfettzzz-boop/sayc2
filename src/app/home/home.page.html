@@ -7,8 +7,56 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">home</ion-title>
-      <ion-title>{{ 'dashboard' | translate }}</ion-title>
+      <ion-title size="large">{{ 'titles.dashboard' | translate }}</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-grid>
+    <ion-row>
+
+      <ion-col>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ 'navigation.user_management' | translate }}</ion-card-title>
+            <ion-card-subtitle>
+              <ion-icon name="people-outline"></ion-icon>
+              {{ 'product.quantity' | translate }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            Descripción 1.
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ 'navigation.user_management' | translate }}</ion-card-title>
+            <ion-card-subtitle>
+              <ion-icon name="people-outline"></ion-icon>
+              {{ 'product.quantity' | translate }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            Descripción 2.
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ 'navigation.user_management' | translate }}</ion-card-title>
+            <ion-card-subtitle>
+              <ion-icon name="people-outline"></ion-icon>
+              {{ 'product.quantity' | translate }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            Descripción 3.
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      
+    </ion-row>
+  </ion-grid>
+
 </ion-content>

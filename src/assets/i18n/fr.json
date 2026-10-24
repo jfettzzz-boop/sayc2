@@ -1,6 +1,7 @@
 {
     "welcome": "Bienvenue",
     "welcome_subtitle": "Système de gestion et d'encaissement.",
+    "product_search" : "Chercher des produits.",
     "login_subtitle": "Content de vous revoir",
     "login": "Se connecter",
     "login_register": "J'ai déjà un compte.",
@@ -44,6 +45,14 @@
         "admin_group": "Administration",
         "searchProducts" : "Rechercher des produits"
 
+    },
+    "product": {
+        "looking": "Cherchant des produits...",
+        "name": "Nom",
+        "brands": "Marque",
+        "unkown": "Inconnu",
+        "quantity": "Quantité",
+        "noImg": "Pas d'image"
     },
     "stats": {
         "title": "Statistiques de participation",
@@ -212,6 +221,7 @@
         "AUTH_EMAIL_ALREADY_REGISTERED": "Adresse e-mail déjà enregistrée.",
         "AUTH_INVALID_CREDENTIALS": "Identifiants incorrects.",
         "SERVER_NOT_REACHED": "Impossible d'accéder au serveur.",
+        "TRY_AGAIN": "Il y a eu une problème de connection avec le serveur. Essayé de nouveau.",
         "AUTH_WEAK_PASSWORD": "Mot de passe non valide.",
         "GOOGLE_AUTH_FAILED": "Échec de l'authentification Google",
         "NOT_FOUND": "Page introuvable",

@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonIcon, IonCol, IonRow, IonGrid, IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle } from '@ionic/angular';
+
+import { addIcons } from 'ionicons';
+import { peopleOutline, searchOutline } from 'ionicons/icons';
+
 
 //Multilanguage
 import { TranslatePipe } from '@ngx-translate/core';
@@ -11,11 +15,17 @@ import { TranslatePipe } from '@ngx-translate/core';
   selector: 'app-home',
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, TranslatePipe]
+  imports: [IonIcon, IonCol, IonRow, IonGrid, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, TranslatePipe, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle]
 })
 export class HomePage implements OnInit {
 
-  constructor() { }
+  constructor() { 
+
+        addIcons({  
+          'people-outline': peopleOutline
+        });
+
+  }
 
   ngOnInit() {
   }

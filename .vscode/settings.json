@@ -7,5 +7,13 @@
   "typescript.preferences.autoImportFileExcludePatterns": [
     "@ionic/angular/types/ionic-angular-lazy.d.ts",
     "@ionic/angular/types/ionic-angular-common.d.ts"
-  ]
+  ],
+ "workbench.experimental.modernUI": false,
+  "window.titleBarStyle": "custom",
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#058053",
+    "titleBar.activeForeground": "#ebe9e9",
+    "statusBar.background": "#015a6e",
+    "statusBar.foreground": "#000000"
+  }
 }

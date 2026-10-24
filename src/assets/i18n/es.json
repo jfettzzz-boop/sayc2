@@ -2,6 +2,7 @@
     "name" : "SAYC",
     "welcome": "Bienvenido",
     "welcome_subtitle": "Sistema de administración y cobro.",
+    "product_search" : "Buscar productos.",
     "login": "Iniciar Sesión",
     "login_subtitle": "Bienvenido nuevamente",
     "login_register": "Ya tengo cuenta.",
@@ -44,6 +45,14 @@
         "database_explorer": "Explorador",
         "admin_group": "Administración",
         "searchProducts" : "Buscar productos"
+    },
+    "product": {
+        "looking": "Buscando productos...",
+        "name": "Nombre",
+        "brands": "Marca",
+        "unkown": "Desconocido",
+        "quantity": "Cantidad",
+        "noImg": "Sin imagen"
     },
     "stats": {
         "title": "Estadísticas de participación",
@@ -109,6 +118,7 @@
         "total": "Total",
         "export_excel": "Exportar a Excel"
     },
+
     "dashboard": {
         "join_event": "Unirse a un evento",
         "join_subtitle": "Introduce el código de acceso.",
@@ -212,6 +222,7 @@
         "AUTH_EMAIL_ALREADY_REGISTERED": "Correo electrónico ya registrado.",
         "AUTH_INVALID_CREDENTIALS": "Credenciales incorrectas.",
         "SERVER_NOT_REACHED": "No se puede conectar con el servidor.",
+        "TRY_AGAIN": "Hubo un problema de conexión con el servidor. Inténtalo de nuevo.",
         "AUTH_WEAK_PASSWORD": "Contraseña inválida.",
         "GOOGLE_AUTH_FAILED": "Fallo en la autenticación de Google",
         "NOT_FOUND": "Página no encontrada",

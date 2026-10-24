@@ -1,54 +1,48 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Buscador de Alimentos</ion-title>
+    <ion-title>{{ 'product_search' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
   <ion-searchbar 
-    [(ngModel)]="searchTerm" 
-    (ionChange)="searchProducts()" 
-    placeholder="Busca por chocolate, leche, pan..."
-    debounce="400">
+    [value]="searchTerm"
+    (ionInput)="onSearchChange($event)" 
+    placeholder="Busca un producto..."
+    [debounce]="0">
   </ion-searchbar>
 
-  @if (isLoading) {
-    <div class="ion-text-center ion-padding">
-      <ion-spinner name="crescent"></ion-spinner>
-      <p>Buscando en Open Food Facts...</p>
-    </div>
-  }
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>{{ 'product.looking' | translate }}</p>
+  </div>
 
-  @if (hasError && !isLoading) {
-    <div class="ion-text-center ion-padding" color="danger">
-      <p style="color: var(--ion-color-danger);">Hubo un problema de conexión con el servidor. Inténtalo de nuevo.</p>
-    </div>
-  }
+  <div *ngIf="hasError && !isLoading" class="ion-text-center ion-padding" color="danger">
+      <p style="color: var(--ion-color-danger);">{{ 'errors.TRY_AGAIN' | translate }}</p>
+  </div>
 
-  @if (!isLoading && !hasError && products.length > 0) {
-    <ion-list>
-      @for (product of products; track product.id || product._id || product.code) {
-        <ion-item lines="inset">
-          <ion-thumbnail slot="start">
-            @if (product.image_front_small_url) {
-              <img [src]="product.image_front_small_url" [alt]="product.product_name" />
-            } @else {
-              <div class="no-image">Sin img</div>
-            }
-          </ion-thumbnail>
-          <ion-label>
-            <h2>{{ product.product_name || 'Producto sin nombre' }}</h2>
-            <p><strong>Marca:</strong> {{ product.brands || 'Desconocida' }}</p>
-            <ion-note color="medium">Cantidad: {{ product.quantity || 'N/D' }}</ion-note>
-          </ion-label>
-        </ion-item>
-      }
-    </ion-list>
-  }
+  <ion-list *ngIf="!isLoading && products.length > 0">
+    <ion-item *ngFor="let product of products" lines="inset">
+      <ion-thumbnail slot="start">
+          <img [src]="product.image_front_small_url || 'assets/ensavoirplus.gif'" [alt]="product.product_name" />        
+      </ion-thumbnail>
+      <ion-label>
+        <h2>{{ product.product_name || 'Producto sin nombre' }}</h2>
+        <p><strong>Marca:</strong> {{ product.brands || 'Desconocida' }}</p>
+        <ion-note color="medium">Cantidad: {{ product.quantity || 'N/D' }}</ion-note>
+      </ion-label>
+      
+      <!-- Botón con ícono para añadir al inventario -->
+      <ion-button slot="end" fill="clear" color="primary" (click)="addToInventory(product)" title="Añadir al inventario">
+        <ion-icon slot="icon-only" ios="add-circle-outline" md="add-sharp"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
 
-  @if (!isLoading && !hasError && hasSearched && products.length === 0) {
-    <div class="ion-text-center ion-padding">
-      <p>No se encontraron productos con ese término.</p>
-    </div>
-  }
+  <div *ngIf="hasSearched && !isLoading && products.length === 0 && !hasError" class="ion-text-center ion-padding">
+    <p>No se encontraron productos.</p>
+  </div>
+  <div *ngIf="hasError" class="ion-text-center ion-padding text-danger">
+    <p>Ocurrió un error al conectar con Open Food Facts. Inténtalo de nuevo.</p>
+  </div>
 </ion-content>

@@ -1,0 +1,13 @@
+{
+  "/api": {
+    "target": "https://world.openfoodfacts.org",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    },
+    "headers": {
+      "User-Agent": "SAYCApp - Ionic App - Version 1.0"
+    }
+  }
+}

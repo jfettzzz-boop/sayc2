@@ -1,6 +1,7 @@
 {
     "welcome": "Welcome",
     "welcome_subtitle": "Administration and billing system.",
+    "product_search": "Search for products",
     "login": "Log In",
     "login_subtitle": "Welcome back",
     "login_register": "I already have an account.",
@@ -19,7 +20,7 @@
     "no_last": "A last name is required",
     "invalid_email": "Invalid email address",
     "user": "User",
-    "dashboard_subtitle": "Manage your events and electoral integrations.",
+    "dashboard_subtitle": "Manage your events.",
     "close_session": "Logout",
     "theme": "Change theme",
     "lang": "Language",
@@ -42,8 +43,15 @@
         "stats": "Statistics",
         "database_explorer": "Explorer",
         "admin_group": "Administration",
-        "searchProducts" : "Search for productos"
-
+        "searchProducts": "Search for productos"
+    },
+    "product": {
+        "looking": "Looking for products...",
+        "name": "Name",
+        "brands": "brand",
+        "unkown": "Unknown",
+        "quantity": "Quantity",
+        "noImg": "No image"
     },
     "stats": {
         "title": "Participation Statistics",
@@ -212,6 +220,7 @@
         "AUTH_EMAIL_ALREADY_REGISTERED": "Email already registered.",
         "AUTH_INVALID_CREDENTIALS": "Invalid credentials.",
         "SERVER_NOT_REACHED": "Unable to connect to the server.",
+        "TRY_AGAIN": "There was a connection problem. Try again",
         "AUTH_WEAK_PASSWORD": "Weak password.",
         "GOOGLE_AUTH_FAILED": "Google authentication failed",
         "NOT_FOUND": "Page not found",

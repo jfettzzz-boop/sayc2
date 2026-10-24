@@ -2,11 +2,25 @@ import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import {homeOutline, homeSharp, personCircleOutline, personCircleSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp, languageOutline, chevronDownOutline, chevronUpOutline, colorPaletteOutline, menuOutline } from 'ionicons/icons';
+import { 
+  searchOutline, searchSharp, search, 
+  close, closeCircle, 
+  addCircleOutline, addSharp,
+  homeOutline, homeSharp, 
+  personCircleOutline, personCircleSharp, 
+  mailOutline, mailSharp, 
+  paperPlaneOutline, paperPlaneSharp, 
+  heartOutline, heartSharp, 
+  archiveOutline, archiveSharp, 
+  trashOutline, trashSharp, 
+  warningOutline, warningSharp, 
+  bookmarkOutline, bookmarkSharp, 
+  languageOutline, chevronDownOutline, chevronUpOutline, 
+  colorPaletteOutline, menuOutline 
+} from 'ionicons/icons';
 
 // Multilanguage
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
-// Multilanguage end
 
 @Component({
   selector: 'app-root',
@@ -16,23 +30,25 @@ import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 })
 export class AppComponent implements OnInit {
   protected readonly appPages = [
-    { title: 'titles.dashboard', url: '/folder/Home', icon: 'home' },
-    { title: 'admin.users_tab', url: '/folder/Users', icon: 'person-circle' },
+    { title: 'titles.dashboard', url: '/home', icon: 'home' },
+    { title: 'admin.users_tab', url: '/users', icon: 'person-circle' },
     { title: 'navigation.searchProducts', url: '/food-search', icon: 'search' },
   ];
   protected readonly labels = ['Extra'];
   
-  // Multilanguage
   protected showLanguageMenu = false;
-  //Theme
   protected showThemeMenu = false;
-  // Menu Collapse state
   protected isCollapsed = false;
 
-  constructor( private translate: TranslateService ) {
-  // Multilanguage end
-
+  constructor(private translate: TranslateService) {
     addIcons({  
+      'search': search,
+      'search-outline': searchOutline,
+      'search-sharp': searchSharp,
+      'close': close,
+      'close-circle': closeCircle,
+      'add-circle-outline': addCircleOutline,
+      'add-sharp': addSharp,
       'home-outline': homeOutline, 
       'home-sharp': homeSharp, 
       'person-circle-outline': personCircleOutline, 
@@ -45,22 +61,23 @@ export class AppComponent implements OnInit {
       mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp 
     });
   }
-  //Multilanguage
+
   ngOnInit() {
     this.translate.addLangs(['es', 'en', 'fr']);
     this.translate.setFallbackLang('es');
     const browserLang = this.translate.getBrowserLang();
-    this.translate.use(browserLang && browserLang.match(/es|en|fr/) ? browserLang : 'es');
+    this.translate.use(browserLang && browserLang.match(/es|en|fr/) ? browserLang : 'fr');
   }
+
   toggleLanguageMenu() {
     this.showLanguageMenu = !this.showLanguageMenu;
   }
+
   changeLanguage(lang: string) {
     this.translate.use(lang);
     this.showLanguageMenu = false;
   }
-  //Multilanguage end
-  //Theme
+
   toggleThemeMenu() {
     this.showThemeMenu = !this.showThemeMenu;
     if (this.showThemeMenu) this.showLanguageMenu = false;
@@ -86,5 +103,4 @@ export class AppComponent implements OnInit {
       this.showThemeMenu = false;
     }
   }
-
 }
