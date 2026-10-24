@@ -35,7 +35,7 @@ import { TranslatePipe } from '@ngx-translate/core';
   ]
 })
 export class FoodSearchPage implements OnInit, OnDestroy {
-  searchTerm: string = 1245;
+  searchTerm: string = '';
   products: any[] = [];
   isLoading: boolean = false;
   hasSearched: boolean = false;
