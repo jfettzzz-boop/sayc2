@@ -1,16 +1,35 @@
-on: 
-    push:
-        branches: [main, master]
-    pull:
-        branches: [main, master]
+name: CI - Angular/Ionic Build & Test
+on:
+  push:
+    branches: [ "main", "master", "dev" ] # Update changes
+  pull_request:
+    branches: [ "main", "master", "dev" ] # On Pull Request
 
 jobs:
-    build-and-test:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-            uses: actions/checkout@v4
-            
-            - name: I
+  build-and-validate:
+    runs-on: ubuntu-latest
 
+    steps:
+      # Download the repository's code to the Github Actions server
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # Setting up the Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Node version according to the project
+          cache: 'npm'
+
+      # Installation of dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Automatic validation
+      - name: Build project
+        run: npm run build
+
+      # Automatic testing ...
+      # vitest (CI) no interactive mode (--run)
+      # - name: Run tests
+      #   run: npx vitest run

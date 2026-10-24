@@ -27,6 +27,7 @@ Búsqueda de Productos con Open Food Facts: Módulo de búsqueda de alimentos en
     ├── .gitignore
 ├── package.json
 └── README.md
+```
 
 ## Instalación
 
@@ -34,8 +35,8 @@ Búsqueda de Productos con Open Food Facts: Módulo de búsqueda de alimentos en
 npm install
 ```
 
-## Ejecución
+## Instalación y ejecución
 
 ```bash
-npm install
+npm start
 ```
