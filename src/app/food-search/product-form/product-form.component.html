@@ -85,6 +85,17 @@
     </ion-input>
   </div>
 
+  <ion-input
+    formControlName="product_img_url"
+    type="url"
+    inputmode="url"
+    maxlength="255"
+    fill="outline"
+    labelPlacement="floating"
+    [label]="'products_page.image_url' | translate"
+    [errorText]="'products_page.image_invalid' | translate">
+  </ion-input>
+
   <ion-textarea
     formControlName="product_description"
     maxlength="5000"

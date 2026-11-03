@@ -37,13 +37,6 @@
       [helperText]="'inventory.quantity_help' | translate"
       [errorText]="quantityErrorKey | translate">
     </ion-input>
-
-    @if (resultingStock !== null) {
-      <p class="resulting" [class.resulting-negative]="resultingStock < 0">
-        {{ 'inventory.resulting' | translate }}:
-        <strong>{{ product().product_current_stock }} → {{ resultingStock }}</strong>
-      </p>
-    }
   } @else {
     <ion-input
       formControlName="adj_new_amount"
@@ -56,6 +49,18 @@
       [label]="('inventory.new_stock' | translate) + ' *'"
       [errorText]="amountErrorKey | translate">
     </ion-input>
+  }
+
+  @if (resultingStock(); as resulting) {
+    <p class="resulting" [class.resulting-negative]="resulting < 0">
+      {{ 'inventory.resulting' | translate }}:
+      <strong>{{ product().product_current_stock }} → {{ resulting }}</strong>
+    </p>
+  } @else if (resultingStock() === 0) {
+    <p class="resulting">
+      {{ 'inventory.resulting' | translate }}:
+      <strong>{{ product().product_current_stock }} → 0</strong>
+    </p>
   }
 
   <ion-select

@@ -107,6 +107,8 @@
         "price_required": "Indica el precio de venta.",
         "price_invalid": "Ingresa un monto válido, mayor que 0 y con hasta 2 decimales.",
         "number_invalid": "Ingresa un número entero válido.",
+        "image_url": "URL de la imagen",
+        "image_invalid": "Ingresa una dirección que empiece con http:// o https://.",
         "barcode_taken": "Ya existe un producto con ese código de barras."
     },
     "inventory": {
@@ -125,6 +127,14 @@
         "quantity_invalid": "Ingresa un número entero distinto de 0.",
         "resulting": "Existencias resultantes",
         "negative_stock": "No hay existencias suficientes para restar esa cantidad.",
+        "col_image": "Imagen",
+        "col_product": "Producto",
+        "col_price": "Precio",
+        "sort": "Ordenar por",
+        "sort_name_asc": "Nombre (A a Z)",
+        "sort_name_desc": "Nombre (Z a A)",
+        "sort_stock_asc": "Existencias (de menor a mayor)",
+        "sort_stock_desc": "Existencias (de mayor a menor)",
         "current_stock": "Existencias actuales",
         "new_stock": "Nuevas existencias",
         "adj_type": "Tipo de ajuste",

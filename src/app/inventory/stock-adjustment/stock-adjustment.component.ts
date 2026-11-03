@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { IonButton, IonInput, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonSpinner, IonText, IonTextarea } from '@ionic/angular';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -9,7 +10,11 @@ import { finalize } from 'rxjs/operators';
 import { Field, text, wholeNumber } from '../../food-search/product-form/product-form.component';
 import { InventoryProduct, ProductsService, StockAdjustment } from '../../food-search/products.service';
 
-const ADJUSTMENT_TYPES = ['entrada', 'salida', 'correccion', 'merma'];
+const STOCK_IN = 'entrada';
+const STOCK_OUT = 'salida';
+const SHRINKAGE = 'merma';
+const CORRECTION = 'correccion';
+const ADJUSTMENT_TYPES = [STOCK_IN, STOCK_OUT, CORRECTION, SHRINKAGE];
 const HISTORY_SIZE = 5;
 const MAX_STOCK = 2147483647;
 
@@ -22,9 +27,17 @@ function signedWholeNumber(control: AbstractControl<Field>): ValidationErrors | 
   return valid ? null : { signedWholeNumber: true };
 }
 
+/** A correction can go either way. Every other type has a direction. */
+function typeFits(type: string, delta: number): boolean {
+  if (type === CORRECTION) return true;
+  if (type === STOCK_IN) return delta > 0;
+  return (type === STOCK_OUT || type === SHRINKAGE) && delta < 0;
+}
+
 /**
  * Changes the stock of a product, which the API records with who did it and why.
  * Either adds or subtracts an amount, with quick buttons or typed, or sets an exact total.
+ * The type and the direction of the change always agree: each one corrects the other.
  */
 @Component({
   selector: 'app-stock-adjustment',
@@ -55,6 +68,38 @@ export class StockAdjustmentComponent implements OnInit {
     adj_motive: new FormControl('', { nonNullable: true }),
   });
 
+  private readonly quantityValue = toSignal(this.form.controls.adj_quantity.valueChanges, { initialValue: '' as Field });
+  private readonly amountValue = toSignal(this.form.controls.adj_new_amount.valueChanges, { initialValue: '' as Field });
+
+  /** How much the active field would change the stock. Null until there is a valid, non-zero change. */
+  private readonly delta = computed(() => {
+    const quantity = this.quantityValue();
+    const amount = this.amountValue();
+    const { adj_quantity, adj_new_amount } = this.form.controls;
+
+    let delta: number | null = null;
+    if (this.mode() === 'change') {
+      if (text(quantity) && adj_quantity.valid) delta = Number(text(quantity));
+    } else if (text(amount) && adj_new_amount.valid) {
+      delta = Number(text(amount)) - this.product().product_current_stock;
+    }
+    return delta === 0 ? null : delta;
+  });
+
+  /** The stock this change would give, for the summary. */
+  protected readonly resultingStock = computed(() => {
+    const delta = this.delta();
+    return delta === null ? null : this.product().product_current_stock + delta;
+  });
+
+  constructor() {
+    const { adj_type, adj_quantity, adj_new_amount } = this.form.controls;
+    adj_quantity.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.selectFittingType());
+    adj_new_amount.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.selectFittingType());
+    // Types set from code don't emit, so this only sees the user's own choices.
+    adj_type.valueChanges.pipe(takeUntilDestroyed()).subscribe((type) => this.applyTypeDirection(type));
+  }
+
   ngOnInit() {
     this.products.adjustments(this.product().id, HISTORY_SIZE).subscribe({
       next: (history) => this.history.set(history),
@@ -72,14 +117,6 @@ export class StockAdjustmentComponent implements OnInit {
     return this.form.controls.adj_new_amount.hasError('required')
       ? 'validation.required'
       : 'products_page.number_invalid';
-  }
-
-  /** The stock this change would give, or null until the amount is valid. */
-  protected get resultingStock(): number | null {
-    const control = this.form.controls.adj_quantity;
-    return text(control.value) && control.valid
-      ? this.product().product_current_stock + Number(text(control.value))
-      : null;
   }
 
   /** Types recorded some other way have no translation, so they show as stored. */
@@ -104,9 +141,13 @@ export class StockAdjustmentComponent implements OnInit {
       adj_new_amount.enable();
       adj_quantity.disable();
     }
+    this.selectFittingType();
   }
 
-  /** Quick buttons build on what's there, so +10 then +5 means +15. */
+  /**
+   * Quick buttons build on what's there, so +10 then +5 means +15. They always select
+   * stock in or stock out, following the total: +5 then -10 is 5 out.
+   */
   protected applyIncrement(increment: number) {
     const control = this.form.controls.adj_quantity;
     const current = Number(text(control.value));
@@ -114,6 +155,7 @@ export class StockAdjustmentComponent implements OnInit {
     this.errorKey.set(null);
     control.setValue(next === 0 ? '' : next);
     control.markAsTouched();
+    if (next !== 0) this.setType(next > 0 ? STOCK_IN : STOCK_OUT);
   }
 
   protected save() {
@@ -151,6 +193,28 @@ export class StockAdjustmentComponent implements OnInit {
       next: (saved) => this.adjusted.emit(saved.adj_new_amount),
       error: (err: HttpErrorResponse) => this.errorKey.set(this.errorKeyFor(err)),
     });
+  }
+
+  /** A typed amount replaces a type that contradicts it, and leaves one that fits, like shrinkage. */
+  private selectFittingType() {
+    const delta = this.delta();
+    if (delta !== null && !typeFits(this.form.controls.adj_type.value, delta)) {
+      this.setType(delta > 0 ? STOCK_IN : STOCK_OUT);
+    }
+  }
+
+  /** Choosing stock out with +5 means 5 out, so the amount and the summary follow the type. */
+  private applyTypeDirection(type: string) {
+    const control = this.form.controls.adj_quantity;
+    if (this.mode() !== 'change' || !control.valid) return;
+
+    const quantity = Number(text(control.value));
+    if (quantity > 0 && (type === STOCK_OUT || type === SHRINKAGE)) control.setValue(-quantity);
+    if (quantity < 0 && type === STOCK_IN) control.setValue(-quantity);
+  }
+
+  private setType(type: string) {
+    this.form.controls.adj_type.setValue(type, { emitEvent: false });
   }
 
   private errorKeyFor(err: HttpErrorResponse): string {

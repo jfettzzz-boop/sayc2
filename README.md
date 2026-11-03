@@ -86,7 +86,7 @@ Todas las rutas requieren `Authorization: Bearer <token>`, excepto `health` y `a
 | GET, POST | `/users` | Admin | Listar y crear usuarios |
 | GET, PATCH, DELETE | `/users/:id` | Admin | Consultar, editar y desactivar (no se borran) |
 | GET | `/roles` | Admin | Listar roles |
-| GET, POST | `/products` | Sesión | Listar (`q`, `low_stock=true`) y crear productos |
+| GET, POST | `/products` | Sesión | Listar (`q`, `low_stock=true`, `sort=name|stock`, `order=asc|desc`) y crear productos |
 | GET | `/products/barcode/:barcode` | Sesión | Buscar por código de barras |
 | GET, PATCH, DELETE | `/products/:id` | Sesión | Consultar, editar y eliminar (409 si tiene historial) |
 | GET, POST | `/sales` | Sesión | Listar y registrar ventas |

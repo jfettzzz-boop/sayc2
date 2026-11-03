@@ -37,9 +37,14 @@ const updateSchema = z
   .partial()
   .refine((data) => Object.keys(data).length > 0, { message: 'No fields to update' });
 
+// Only these reach the ORDER BY, because the schema limits sort to these keys.
+const SORT_COLUMNS = { name: 'product_name', stock: 'product_current_stock' };
+
 const listSchema = z.object({
   q: z.string().trim().max(150).optional(),
   low_stock: z.enum(['true', 'false']).optional(),
+  sort: z.enum(['name', 'stock']).default('name'),
+  order: z.enum(['asc', 'desc']).default('asc'),
   ...pagination,
 });
 
@@ -61,7 +66,7 @@ export const productsRouter = Router();
 productsRouter.use(requireAuth);
 
 productsRouter.get('/', async (req, res) => {
-  const { q, low_stock, limit, offset } = listSchema.parse(req.query);
+  const { q, low_stock, sort, order, limit, offset } = listSchema.parse(req.query);
 
   const where = [];
   const params = [];
@@ -75,7 +80,7 @@ productsRouter.get('/', async (req, res) => {
   const [rows] = await pool.query(
     `SELECT * FROM products
      ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-     ORDER BY product_name, id LIMIT ? OFFSET ?`,
+     ORDER BY ${SORT_COLUMNS[sort]} ${order === 'desc' ? 'DESC' : 'ASC'}, product_name, id LIMIT ? OFFSET ?`,
     [...params, limit, offset],
   );
   res.json(rows.map(present));

@@ -206,6 +206,37 @@ describe('SAYC API', { skip }, () => {
       assert.equal(scanned.body.id, COCA);
     });
 
+    it('sorts by name or stock, in either direction', async () => {
+      const list = async (params) => (await call('GET', `/products?limit=200&${params}`, { token: employee })).body;
+      const names = (products) => products.map((p) => p.product_name);
+      const stocks = (products) => products.map((p) => p.product_current_stock);
+      const ordered = (values, compare) => values.every((v, i) => i === 0 || compare(values[i - 1], v) <= 0);
+      const byName = (a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' });
+
+      const standard = await list('');
+      assert.ok(ordered(names(standard), byName));
+      assert.deepEqual(names(await list('sort=name&order=asc')), names(standard));
+      assert.ok(ordered(names(await list('sort=name&order=desc')), (a, b) => byName(b, a)));
+      assert.ok(ordered(stocks(await list('sort=stock&order=asc')), (a, b) => a - b));
+      assert.ok(ordered(stocks(await list('sort=stock&order=desc')), (a, b) => b - a));
+    });
+
+    it('breaks stock ties by name, so paging is stable', async () => {
+      const { body } = await call('GET', '/products?limit=200&sort=stock&order=desc', { token: employee });
+      for (let i = 1; i < body.length; i++) {
+        if (body[i - 1].product_current_stock === body[i].product_current_stock) {
+          assert.ok(body[i - 1].product_name.localeCompare(body[i].product_name, 'es', { sensitivity: 'base' }) <= 0);
+        }
+      }
+    });
+
+    it('rejects a sort it does not know, including SQL', async () => {
+      for (const params of ['sort=id', 'sort=product_name;DROP TABLE products', 'order=sideways']) {
+        const res = await call('GET', `/products?${params}`, { token: employee });
+        assert.equal(res.status, 400, params);
+      }
+    });
+
     it('creates from Open Food Facts data, including a barcode conflict', async () => {
       const body = { product_barcode: '3017620422003', product_name: 'Nutella', product_sell_price: 95.5, product_api_origin: true };
       const created = await call('POST', '/products', { token: employee, body });

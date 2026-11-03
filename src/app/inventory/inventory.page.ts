@@ -2,16 +2,29 @@ import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AlertController, IonBadge, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenuButton, IonModal, IonSearchbar, IonSpinner, IonText, IonTitle, IonToggle, IonToolbar } from '@ionic/angular';
+import { AlertController, IonBadge, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonMenuButton, IonModal, IonSearchbar, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToggle, IonToolbar } from '@ionic/angular';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { addOutline, createOutline, layersOutline, trashOutline } from 'ionicons/icons';
+import { addOutline, arrowDownOutline, arrowUpOutline, createOutline, imageOutline, layersOutline, swapVerticalOutline, trashOutline } from 'ionicons/icons';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, finalize } from 'rxjs/operators';
 
 import { ProductFormComponent } from '../food-search/product-form/product-form.component';
-import { InventoryProduct, PRODUCTS_PAGE_SIZE, ProductsService } from '../food-search/products.service';
+import { InventoryProduct, PRODUCTS_PAGE_SIZE, ProductQuery, ProductSortField, ProductsService, SortOrder } from '../food-search/products.service';
 import { StockAdjustmentComponent } from './stock-adjustment/stock-adjustment.component';
+
+interface SortOption {
+  field: ProductSortField;
+  order: SortOrder;
+  labelKey: string;
+}
+
+const SORT_OPTIONS: SortOption[] = [
+  { field: 'name', order: 'asc', labelKey: 'inventory.sort_name_asc' },
+  { field: 'name', order: 'desc', labelKey: 'inventory.sort_name_desc' },
+  { field: 'stock', order: 'asc', labelKey: 'inventory.sort_stock_asc' },
+  { field: 'stock', order: 'desc', labelKey: 'inventory.sort_stock_desc' },
+];
 
 /** Null while creating, the product being changed while editing. */
 interface Editor {
@@ -22,7 +35,7 @@ interface Editor {
   selector: 'app-inventory',
   templateUrl: './inventory.page.html',
   styleUrls: ['./inventory.page.scss'],
-  imports: [DecimalPipe, IonBadge, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenuButton, IonModal, IonSearchbar, IonSpinner, IonText, IonTitle, IonToggle, IonToolbar, ProductFormComponent, StockAdjustmentComponent, TranslatePipe],
+  imports: [DecimalPipe, IonBadge, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonMenuButton, IonModal, IonSearchbar, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToggle, IonToolbar, ProductFormComponent, StockAdjustmentComponent, TranslatePipe],
 })
 export class InventoryPage {
   private readonly productsService = inject(ProductsService);
@@ -33,6 +46,10 @@ export class InventoryPage {
   protected readonly products = signal<InventoryProduct[]>([]);
   protected readonly searchTerm = signal('');
   protected readonly lowStockOnly = signal(false);
+  protected readonly sortOptions = SORT_OPTIONS;
+  protected readonly sort = signal<SortOption>(SORT_OPTIONS[0]);
+  /** Picture addresses that failed to load, so those rows show the placeholder instead. */
+  protected readonly failedImages = signal<ReadonlySet<string>>(new Set());
   protected readonly isLoading = signal(false);
   protected readonly isLoadingMore = signal(false);
   protected readonly hasMore = signal(false);
@@ -47,8 +64,12 @@ export class InventoryPage {
   constructor() {
     addIcons({
       'add-outline': addOutline,
+      'arrow-down-outline': arrowDownOutline,
+      'arrow-up-outline': arrowUpOutline,
       'create-outline': createOutline,
+      'image-outline': imageOutline,
       'layers-outline': layersOutline,
+      'swap-vertical-outline': swapVerticalOutline,
       'trash-outline': trashOutline,
     });
     this.searches.pipe(debounceTime(300), takeUntilDestroyed()).subscribe(() => this.load());
@@ -68,6 +89,38 @@ export class InventoryPage {
     this.load();
   }
 
+  protected onSortSelected(labelKey: unknown) {
+    const option = SORT_OPTIONS.find((o) => o.labelKey === labelKey);
+    if (option && option !== this.sort()) this.applySort(option);
+  }
+
+  /** A column header sorts by that column, and flips the order when it's already the one in use. */
+  protected toggleSort(field: ProductSortField) {
+    const current = this.sort();
+    const order: SortOrder = current.field === field && current.order === 'asc' ? 'desc' : 'asc';
+    this.applySort(SORT_OPTIONS.find((o) => o.field === field && o.order === order)!);
+  }
+
+  protected ariaSort(field: ProductSortField): 'ascending' | 'descending' | 'none' {
+    const current = this.sort();
+    if (current.field !== field) return 'none';
+    return current.order === 'asc' ? 'ascending' : 'descending';
+  }
+
+  protected sortIcon(field: ProductSortField): string {
+    const direction = this.ariaSort(field);
+    if (direction === 'none') return 'swap-vertical-outline';
+    return direction === 'ascending' ? 'arrow-up-outline' : 'arrow-down-outline';
+  }
+
+  protected showImage(product: InventoryProduct): boolean {
+    return !!product.product_img_url && !this.failedImages().has(product.product_img_url);
+  }
+
+  protected onImageError(url: string | null) {
+    if (url) this.failedImages.update((failed) => new Set(failed).add(url));
+  }
+
   /** Same definition of low stock as the API and the dashboard. */
   protected isLow(product: InventoryProduct): boolean {
     return product.product_current_stock <= product.product_min_stock;
@@ -80,7 +133,7 @@ export class InventoryPage {
     this.loadFailed.set(false);
     this.actionErrorKey.set(null);
 
-    this.loadSubscription = this.productsService.list(this.searchTerm().trim(), this.lowStockOnly(), 0).pipe(
+    this.loadSubscription = this.productsService.list(this.query(), 0).pipe(
       finalize(() => this.isLoading.set(false)),
     ).subscribe({
       next: (products) => {
@@ -101,7 +154,7 @@ export class InventoryPage {
     this.actionErrorKey.set(null);
 
     this.loadSubscription = this.productsService
-      .list(this.searchTerm().trim(), this.lowStockOnly(), this.products().length)
+      .list(this.query(), this.products().length)
       .pipe(finalize(() => this.isLoadingMore.set(false)))
       .subscribe({
         next: (products) => {
@@ -163,6 +216,16 @@ export class InventoryPage {
         );
       },
     });
+  }
+
+  private applySort(option: SortOption) {
+    this.sort.set(option);
+    this.load();
+  }
+
+  private query(): ProductQuery {
+    const { field, order } = this.sort();
+    return { q: this.searchTerm().trim(), lowStockOnly: this.lowStockOnly(), sort: field, order };
   }
 
   private replace(saved: InventoryProduct) {

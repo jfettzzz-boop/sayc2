@@ -80,6 +80,8 @@ describe('ProductFormComponent', () => {
     [{ product_name: 'x', product_sell_price: '1', product_current_stock: '1.5' }],
     [{ product_name: 'x', product_sell_price: '1', product_min_stock: '-1' }],
     [{ product_name: 'x', product_sell_price: '1', product_current_stock: '9999999999' }],
+    [{ product_name: 'x', product_sell_price: '1', product_img_url: 'not a url' }],
+    [{ product_name: 'x', product_sell_price: '1', product_img_url: 'javascript:alert(1)' }],
   ])('does not send %j', (values) => {
     fill(values);
     instance().save();
@@ -151,6 +153,26 @@ describe('ProductFormComponent', () => {
       const req = http.expectOne(`${URL}/p1`);
       expect(req.request.body).toEqual({ product_barcode: null, product_brand: null });
       req.flush(PRODUCT);
+    });
+
+    it('changes and clears the picture', () => {
+      fixture.componentRef.setInput('product', { ...PRODUCT, product_img_url: 'https://img/a.jpg' });
+      fixture.detectChanges();
+      expect(form.controls.product_img_url.value).toBe('https://img/a.jpg');
+
+      form.patchValue({ product_img_url: 'https://img/b.jpg' });
+      instance().save();
+      const changed = http.expectOne(`${URL}/p1`);
+      expect(changed.request.body).toEqual({ product_img_url: 'https://img/b.jpg' });
+      changed.flush(PRODUCT);
+
+      fixture.componentRef.setInput('product', { ...PRODUCT, product_img_url: 'https://img/a.jpg' });
+      fixture.detectChanges();
+      form.patchValue({ product_img_url: '' });
+      instance().save();
+      const cleared = http.expectOne(`${URL}/p1`);
+      expect(cleared.request.body).toEqual({ product_img_url: null });
+      cleared.flush(PRODUCT);
     });
 
     it('never sends stock', () => {

@@ -106,6 +106,8 @@
         "price_required": "Enter the selling price.",
         "price_invalid": "Enter a valid amount, above 0 with up to 2 decimals.",
         "number_invalid": "Enter a valid whole number.",
+        "image_url": "Image URL",
+        "image_invalid": "Enter an address starting with http:// or https://.",
         "barcode_taken": "A product with that barcode already exists."
     },
     "inventory": {
@@ -124,6 +126,14 @@
         "quantity_invalid": "Enter a whole number other than 0.",
         "resulting": "Resulting stock",
         "negative_stock": "There is not enough stock to subtract that amount.",
+        "col_image": "Picture",
+        "col_product": "Product",
+        "col_price": "Price",
+        "sort": "Sort by",
+        "sort_name_asc": "Name (A to Z)",
+        "sort_name_desc": "Name (Z to A)",
+        "sort_stock_asc": "Stock (low to high)",
+        "sort_stock_desc": "Stock (high to low)",
         "current_stock": "Current stock",
         "new_stock": "New stock",
         "adj_type": "Adjustment type",

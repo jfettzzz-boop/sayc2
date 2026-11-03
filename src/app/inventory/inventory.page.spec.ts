@@ -20,7 +20,8 @@ const product = (id: string, stock = 10, min = 5) => ({
   product_min_stock: min,
 });
 
-const listUrl = (offset: number, extra = '') => `/api/v1/products?limit=50&offset=${offset}${extra}`;
+const listUrl = (offset: number, sort = 'name', order = 'asc') =>
+  `/api/v1/products?limit=50&offset=${offset}&sort=${sort}&order=${order}`;
 
 describe('InventoryPage', () => {
   let fixture: ComponentFixture<InventoryPage>;
@@ -65,6 +66,93 @@ describe('InventoryPage', () => {
     expect(rendered('.adjust-stock')).toBe(1);
     expect(rendered('.edit-product')).toBe(1);
     expect(rendered('.delete-product')).toBe(1);
+  });
+
+  describe('sorting', () => {
+    beforeEach(() => {
+      setup('Empleado');
+      http.expectOne(listUrl(0)).flush([]);
+    });
+
+    it.each([
+      ['inventory.sort_name_desc', 'name', 'desc'],
+      ['inventory.sort_stock_asc', 'stock', 'asc'],
+      ['inventory.sort_stock_desc', 'stock', 'desc'],
+    ])('the select applies %s on the server', (labelKey, sort, order) => {
+      page.onSortSelected(labelKey);
+      http.expectOne(listUrl(0, sort, order)).flush([]);
+    });
+
+    it('does not reload when the select reports the sort already in use', () => {
+      page.onSortSelected('inventory.sort_name_asc');
+      http.expectNone(listUrl(0));
+    });
+
+    it('a header flips its own column and starts ascending on another', () => {
+      page.toggleSort('name');
+      http.expectOne(listUrl(0, 'name', 'desc')).flush([]);
+      expect(page.ariaSort('name')).toBe('descending');
+      expect(page.ariaSort('stock')).toBe('none');
+
+      page.toggleSort('stock');
+      http.expectOne(listUrl(0, 'stock', 'asc')).flush([]);
+      expect(page.ariaSort('stock')).toBe('ascending');
+      expect(page.sortIcon('stock')).toBe('arrow-up-outline');
+      expect(page.sortIcon('name')).toBe('swap-vertical-outline');
+
+      page.toggleSort('stock');
+      http.expectOne(listUrl(0, 'stock', 'desc')).flush([]);
+      expect(page.sortIcon('stock')).toBe('arrow-down-outline');
+    });
+
+    it('later pages keep the sort', () => {
+      page.onSortSelected('inventory.sort_stock_desc');
+      http.expectOne(listUrl(0, 'stock', 'desc')).flush(Array.from({ length: 50 }, (_, i) => product(`p${i}`)));
+      page.loadMore();
+      http.expectOne(listUrl(50, 'stock', 'desc')).flush([]);
+    });
+
+    it('the search keeps the sort', () => {
+      page.onSortSelected('inventory.sort_stock_asc');
+      http.expectOne(listUrl(0, 'stock', 'asc')).flush([]);
+      page.searchTerm.set('coca');
+      page.load();
+      const req = http.expectOne((r) => r.url === '/api/v1/products');
+      expect(req.request.params.get('sort')).toBe('stock');
+      expect(req.request.params.get('q')).toBe('coca');
+      req.flush([]);
+    });
+  });
+
+  describe('pictures', () => {
+    const withImage = { ...product('a'), product_img_url: 'https://img/a.jpg' };
+    const noImage = { ...product('b'), product_img_url: null };
+
+    beforeEach(() => {
+      setup('Empleado');
+      http.expectOne(listUrl(0)).flush([withImage, noImage]);
+      fixture.detectChanges();
+    });
+
+    it('shows the picture, and a placeholder when there is none', () => {
+      const image = fixture.nativeElement.querySelector('.product-image');
+      expect(image.getAttribute('src')).toBe('https://img/a.jpg');
+      expect(image.getAttribute('alt')).toBe('Product a');
+      expect(rendered('.image-placeholder')).toBe(1);
+    });
+
+    it('falls back to the placeholder when a picture fails to load', () => {
+      fixture.nativeElement.querySelector('.product-image').dispatchEvent(new Event('error'));
+      fixture.detectChanges();
+      expect(rendered('.product-image')).toBe(0);
+      expect(rendered('.image-placeholder')).toBe(2);
+    });
+
+    it('tries again when the picture changes', () => {
+      page.onImageError('https://img/a.jpg');
+      expect(page.showImage(withImage)).toBe(false);
+      expect(page.showImage({ ...withImage, product_img_url: 'https://img/new.jpg' })).toBe(true);
+    });
   });
 
   it('filters by low stock, keeping the search', () => {

@@ -32,6 +32,11 @@ function aboveZero(control: AbstractControl<Field>): ValidationErrors | null {
   return value && Number(value) <= 0 ? { aboveZero: true } : null;
 }
 
+function imageUrl(control: AbstractControl<Field>): ValidationErrors | null {
+  const value = text(control.value);
+  return !value || /^https?:\/\/\S+$/i.test(value) ? null : { imageUrl: true };
+}
+
 function errorKeyFor(err: HttpErrorResponse): string {
   if (err.error?.error?.code === 'BARCODE_ALREADY_REGISTERED') return 'products_page.barcode_taken';
   if (err.status === 400) return 'admin.invalid_data';
@@ -69,6 +74,7 @@ export class ProductFormComponent {
     product_costs: new FormControl<Field>('', [money]),
     product_current_stock: new FormControl<Field>('', [wholeNumber]),
     product_min_stock: new FormControl<Field>('', [wholeNumber]),
+    product_img_url: new FormControl<Field>('', [imageUrl]),
   });
 
   constructor() {
@@ -86,6 +92,7 @@ export class ProductFormComponent {
           product_costs: product?.product_costs ?? '',
           product_current_stock: '',
           product_min_stock: product?.product_min_stock ?? '',
+          product_img_url: product?.product_img_url ?? draft?.imageUrl ?? '',
         });
       });
     });
@@ -133,7 +140,6 @@ export class ProductFormComponent {
   /** Leaves out blank optional fields, so the database applies its defaults. */
   private buildProduct(): NewProduct {
     const v = this.form.getRawValue();
-    const draft = this.draft();
     const optional = (value: Field, parse: (s: string) => string | number = (s) => s) =>
       text(value) ? parse(text(value)) : undefined;
 
@@ -146,11 +152,9 @@ export class ProductFormComponent {
       product_costs: optional(v.product_costs, Number) as number | undefined,
       product_current_stock: optional(v.product_current_stock, Number) as number | undefined,
       product_min_stock: optional(v.product_min_stock, Number) as number | undefined,
+      product_img_url: optional(v.product_img_url) as string | undefined,
     };
-    if (draft) {
-      product.product_api_origin = true;
-      if (draft.imageUrl) product.product_img_url = draft.imageUrl;
-    }
+    if (this.draft()) product.product_api_origin = true;
     return product;
   }
 
@@ -176,6 +180,9 @@ export class ProductFormComponent {
 
     const description = text(v.product_description) || null;
     if (description !== product.product_description) changes.product_description = description;
+
+    const image = text(v.product_img_url) || null;
+    if (image !== (product.product_img_url ?? null)) changes.product_img_url = image;
 
     const cost = text(v.product_costs);
     if (cost && Number(cost) !== product.product_costs) changes.product_costs = Number(cost);

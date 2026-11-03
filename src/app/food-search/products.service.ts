@@ -26,6 +26,17 @@ export interface InventoryProduct {
   product_costs: number;
   product_current_stock: number;
   product_min_stock: number;
+  product_img_url: string | null;
+}
+
+export type ProductSortField = 'name' | 'stock';
+export type SortOrder = 'asc' | 'desc';
+
+export interface ProductQuery {
+  q: string;
+  lowStockOnly: boolean;
+  sort: ProductSortField;
+  order: SortOrder;
 }
 
 /** Stock is left out on purpose: it only changes through sales and adjustments, which keeps its history. */
@@ -37,6 +48,7 @@ export interface ProductChanges {
   product_description?: string | null;
   product_costs?: number;
   product_min_stock?: number;
+  product_img_url?: string | null;
 }
 
 export interface StockAdjustment {
@@ -65,13 +77,15 @@ export class ProductsService {
   private readonly http = inject(HttpClient);
   private readonly url = '/api/v1/products';
 
-  list(q: string, lowStockOnly: boolean, offset: number): Observable<InventoryProduct[]> {
+  list({ q, lowStockOnly, sort, order }: ProductQuery, offset: number): Observable<InventoryProduct[]> {
     return this.http.get<InventoryProduct[]>(this.url, {
       params: {
         limit: PRODUCTS_PAGE_SIZE,
         offset,
         ...(q && { q }),
         ...(lowStockOnly && { low_stock: 'true' }),
+        sort,
+        order,
       },
     });
   }

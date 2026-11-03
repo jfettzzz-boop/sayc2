@@ -52,7 +52,7 @@ describe('StockAdjustmentComponent', () => {
       page.applyIncrement(10);
       page.applyIncrement(5);
       expect(page.form.controls.adj_quantity.value).toBe(15);
-      expect(page.resultingStock).toBe(40);
+      expect(page.resultingStock()).toBe(40);
       page.applyIncrement(-1);
       expect(page.form.controls.adj_quantity.value).toBe(14);
     });
@@ -67,16 +67,23 @@ describe('StockAdjustmentComponent', () => {
       page.applyIncrement(1);
       page.applyIncrement(-1);
       expect(page.form.controls.adj_quantity.value).toBe('');
-      expect(page.resultingStock).toBeNull();
+      expect(page.resultingStock()).toBeNull();
     });
 
-    it.each(['7', 7, '+7', '137', '-3', -3])('sends the typed amount %s', (typed) => {
-      page.form.patchValue({ adj_type: 'entrada', adj_quantity: typed });
+    it.each([
+      ['7', 'entrada'],
+      [7, 'entrada'],
+      ['+7', 'entrada'],
+      ['137', 'entrada'],
+      ['-3', 'salida'],
+      [-3, 'salida'],
+    ])('sends the typed amount %s as %s', (typed, type) => {
+      page.form.patchValue({ adj_quantity: typed });
       page.save();
       const req = http.expectOne(URL);
       expect(req.request.body).toEqual({
         product_id: 'p1',
-        adj_type: 'entrada',
+        adj_type: type,
         adj_quantity: Number(typed),
         adj_motive: null,
       });
@@ -89,10 +96,95 @@ describe('StockAdjustmentComponent', () => {
       http.expectNone(URL);
     });
 
-    it('needs a type', () => {
-      page.applyIncrement(1);
-      page.save();
-      http.expectNone(URL);
+    describe('keeping the type and the amount in agreement', () => {
+      const type = () => page.form.controls.adj_type.value;
+      const quantity = () => page.form.controls.adj_quantity.value;
+
+      it.each([1, 5, 10])('+%i selects stock in', (increment) => {
+        page.applyIncrement(increment);
+        expect(type()).toBe('entrada');
+      });
+
+      it.each([-1, -5, -10])('%i selects stock out', (increment) => {
+        page.applyIncrement(increment);
+        expect(type()).toBe('salida');
+      });
+
+      it('follows the total of the quick buttons, with the summary', () => {
+        page.applyIncrement(5);
+        expect(type()).toBe('entrada');
+        expect(page.resultingStock()).toBe(30);
+        page.applyIncrement(-10);
+        expect(type()).toBe('salida');
+        expect(quantity()).toBe(-5);
+        expect(page.resultingStock()).toBe(20);
+      });
+
+      it('a quick button replaces a type chosen earlier', () => {
+        page.form.controls.adj_type.setValue('merma');
+        page.applyIncrement(-5);
+        expect(type()).toBe('salida');
+      });
+
+      it('leaves the type alone when the buttons cancel out', () => {
+        page.applyIncrement(1);
+        page.applyIncrement(-1);
+        expect(type()).toBe('entrada');
+        expect(page.resultingStock()).toBeNull();
+      });
+
+      it('a typed amount replaces a type that contradicts it', () => {
+        page.form.controls.adj_type.setValue('entrada');
+        page.form.controls.adj_quantity.setValue(-3);
+        expect(type()).toBe('salida');
+        page.form.controls.adj_quantity.setValue(3);
+        expect(type()).toBe('entrada');
+      });
+
+      it.each([
+        ['merma', -3],
+        ['correccion', -3],
+        ['correccion', 3],
+      ])('a typed amount keeps %s when it fits %i', (kept, amount) => {
+        page.form.controls.adj_type.setValue(kept);
+        page.form.controls.adj_quantity.setValue(amount);
+        expect(type()).toBe(kept);
+      });
+
+      it.each([
+        ['salida', 5, -5, 20],
+        ['merma', 5, -5, 20],
+        ['entrada', -5, 5, 30],
+        ['correccion', 5, 5, 30],
+        ['correccion', -5, -5, 20],
+      ])('choosing %s corrects %i to %i and the summary to %i', (chosen, start, corrected, resulting) => {
+        page.form.controls.adj_quantity.setValue(start);
+        page.form.controls.adj_type.setValue(chosen);
+        expect(quantity()).toBe(corrected);
+        expect(type()).toBe(chosen);
+        expect(page.resultingStock()).toBe(resulting);
+      });
+
+      it('shows a resulting stock of 0', () => {
+        page.form.controls.adj_quantity.setValue(-25);
+        expect(page.resultingStock()).toBe(0);
+      });
+
+      it('has no summary or type for an invalid amount', () => {
+        page.form.controls.adj_quantity.setValue('1.5');
+        expect(page.resultingStock()).toBeNull();
+        expect(type()).toBe('');
+      });
+
+      it('sends what the summary shows', () => {
+        page.form.controls.adj_quantity.setValue(5);
+        page.form.controls.adj_type.setValue('salida');
+        page.save();
+        const req = http.expectOne(URL);
+        expect(req.request.body.adj_type).toBe('salida');
+        expect(req.request.body.adj_quantity).toBe(-5);
+        req.flush({ id: 'a', adj_new_amount: 20 });
+      });
     });
 
     it('stops a subtraction that exceeds the stock, but allows reaching 0', () => {
@@ -135,7 +227,6 @@ describe('StockAdjustmentComponent', () => {
     });
 
     it.each([
-      [{ adj_type: '', adj_new_amount: '10' }],
       [{ adj_type: 'entrada', adj_new_amount: '' }],
       [{ adj_type: 'entrada', adj_new_amount: '-1' }],
       [{ adj_type: 'entrada', adj_new_amount: '1.5' }],
@@ -143,6 +234,24 @@ describe('StockAdjustmentComponent', () => {
       page.form.patchValue(values);
       page.save();
       http.expectNone(URL);
+    });
+
+    it.each([
+      ['40', 'entrada', 40],
+      ['10', 'salida', 10],
+      ['0', 'salida', 0],
+    ])('an exact amount of %s selects %s and shows %i', (amount, type, resulting) => {
+      page.form.controls.adj_new_amount.setValue(amount);
+      expect(page.form.controls.adj_type.value).toBe(type);
+      expect(page.resultingStock()).toBe(resulting);
+    });
+
+    it('an exact amount keeps a correction, and the type never changes the amount', () => {
+      page.form.controls.adj_type.setValue('correccion');
+      page.form.controls.adj_new_amount.setValue('40');
+      expect(page.form.controls.adj_type.value).toBe('correccion');
+      page.form.controls.adj_type.setValue('salida');
+      expect(page.form.controls.adj_new_amount.value).toBe('40');
     });
 
     it('refuses an amount that changes nothing', () => {
@@ -173,6 +282,26 @@ describe('StockAdjustmentComponent', () => {
       expect(req.request.body.adj_new_amount).toBe(0);
       req.flush({ id: 'a', adj_new_amount: 0 });
     });
+  });
+
+  it('needs a type when the amount does not imply one', () => {
+    page.onModeChange('set');
+    page.form.controls.adj_new_amount.setValue(25);
+    page.save();
+    http.expectNone(URL);
+    expect(page.form.controls.adj_type.invalid).toBe(true);
+  });
+
+  it('the summary follows the active field when changing mode', () => {
+    page.form.controls.adj_quantity.setValue(5);
+    page.onModeChange('set');
+    expect(page.resultingStock()).toBeNull();
+    page.form.controls.adj_new_amount.setValue('10');
+    expect(page.resultingStock()).toBe(10);
+    expect(page.form.controls.adj_type.value).toBe('salida');
+    page.onModeChange('change');
+    expect(page.resultingStock()).toBe(30);
+    expect(page.form.controls.adj_type.value).toBe('entrada');
   });
 
   it('keeps what was typed when changing mode and back', () => {
