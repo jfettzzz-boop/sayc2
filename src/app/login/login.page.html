@@ -1,4 +1,9 @@
 <ion-content class="ion-padding">
+  <header class="login-brand">
+    <h1>SAYC</h1>
+    <p>{{ 'welcome_subtitle' | translate }}</p>
+  </header>
+
   <ion-card class="login-card">
     <ion-card-header>
       <div class="login-preferences">
@@ -8,13 +13,7 @@
         </ion-button>
         <ion-popover trigger="login-language" [dismissOnSelect]="true">
           <ng-template>
-            <ion-list lines="none">
-              @for (language of languages; track language.code) {
-                <ion-item button [detail]="false" (click)="preferences.setLanguage(language.code)">
-                  <ion-label>{{ language.label }}</ion-label>
-                </ion-item>
-              }
-            </ion-list>
+            <app-preference-options kind="language"></app-preference-options>
           </ng-template>
         </ion-popover>
 
@@ -24,13 +23,7 @@
         </ion-button>
         <ion-popover trigger="login-theme" [dismissOnSelect]="true">
           <ng-template>
-            <ion-list lines="none">
-              @for (theme of themes; track theme.id) {
-                <ion-item button [detail]="false" (click)="preferences.setTheme(theme.id)">
-                  <ion-label>{{ theme.labelKey | translate }}</ion-label>
-                </ion-item>
-              }
-            </ion-list>
+            <app-preference-options kind="theme"></app-preference-options>
           </ng-template>
         </ion-popover>
       </div>

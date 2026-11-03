@@ -2,12 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonIcon, IonInput, IonInputPasswordToggle, IonItem, IonLabel, IonList, IonPopover, IonSpinner, IonText } from '@ionic/angular';
+import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonIcon, IonInput, IonInputPasswordToggle, IonPopover, IonSpinner, IonText } from '@ionic/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 
 import { AuthService } from '../auth/auth.service';
-import { LANGUAGES, PreferencesService, THEMES } from '../preferences/preferences.service';
+import { PreferenceOptionsComponent } from '../preferences/preference-options.component';
 
 /** Maps a failed login to its key in the i18n files. */
 function loginErrorKey(err: HttpErrorResponse): string {
@@ -33,15 +33,11 @@ function loginErrorKey(err: HttpErrorResponse): string {
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
-  imports: [ReactiveFormsModule, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonIcon, IonInput, IonInputPasswordToggle, IonItem, IonLabel, IonList, IonPopover, IonSpinner, IonText, TranslatePipe],
+  imports: [ReactiveFormsModule, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonIcon, IonInput, IonInputPasswordToggle, IonPopover, IonSpinner, IonText, PreferenceOptionsComponent, TranslatePipe],
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  protected readonly preferences = inject(PreferencesService);
-
-  protected readonly languages = LANGUAGES;
-  protected readonly themes = THEMES;
 
   protected readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),

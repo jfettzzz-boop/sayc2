@@ -2,9 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router, RouterLink } from '@angular/router';
 
-import { MenuController } from '@ionic/angular';
+import { AlertController, MenuController, NavController } from '@ionic/angular';
 
 import { AppComponent } from './app.component';
+import { AuthService } from './auth/auth.service';
 
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -99,14 +100,38 @@ describe('AppComponent', () => {
       app.isPaneVisible.set(true);
       expect(app.isNarrow).toBe(true);
     });
+  });
 
-    it('closes the open language and theme lists when narrowing', () => {
-      const { app } = setup(true);
-      app.showLanguageMenu = true;
-      app.showThemeMenu = true;
-      app.toggleCollapse();
-      expect(app.showLanguageMenu).toBe(false);
-      expect(app.showThemeMenu).toBe(false);
+  describe('logging out', () => {
+    function setup() {
+      const fixture = TestBed.createComponent(AppComponent);
+      const auth = TestBed.inject(AuthService);
+      const clearSession = vi.spyOn(auth, 'clearSession');
+      const navigateRoot = vi.spyOn(TestBed.inject(NavController), 'navigateRoot').mockResolvedValue(true);
+      const present = vi.fn().mockResolvedValue(undefined);
+      const create = vi.spyOn(TestBed.inject(AlertController), 'create').mockResolvedValue({ present } as any);
+      return { app: fixture.componentInstance as any, clearSession, navigateRoot, present, create };
+    }
+
+    it('asks first, and keeps the session until confirmed', async () => {
+      const { app, clearSession, navigateRoot, present } = setup();
+      await app.confirmLogout();
+      expect(present).toHaveBeenCalledOnce();
+      expect(clearSession).not.toHaveBeenCalled();
+      expect(navigateRoot).not.toHaveBeenCalled();
+    });
+
+    it('cancelling changes nothing, and only the confirm button logs out', async () => {
+      const { app, clearSession, navigateRoot, create } = setup();
+      await app.confirmLogout();
+      const [cancel, confirm] = create.mock.calls[0][0]!.buttons as any[];
+
+      expect(cancel.role).toBe('cancel');
+      expect(cancel.handler).toBeUndefined();
+
+      confirm.handler();
+      expect(clearSession).toHaveBeenCalledOnce();
+      expect(navigateRoot).toHaveBeenCalledWith('/login');
     });
   });
 });

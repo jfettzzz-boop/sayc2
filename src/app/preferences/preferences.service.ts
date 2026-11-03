@@ -7,11 +7,12 @@ export const LANGUAGES = [
   { code: 'fr', label: 'Français (FR)' },
 ];
 
+// The colors repeat global.scss and Ionic's palettes, to preview a theme before it's applied.
 export const THEMES = [
-  { id: 'light', labelKey: 'light' },
-  { id: 'dark', labelKey: 'dark' },
-  { id: 'theme-sunset', labelKey: 'theme_sunset' },
-  { id: 'theme-emerald', labelKey: 'theme_emerald' },
+  { id: 'light', labelKey: 'light', background: '#ffffff', primary: '#0054e9' },
+  { id: 'dark', labelKey: 'dark', background: '#121212', primary: '#4d8dff' },
+  { id: 'theme-sunset', labelKey: 'theme_sunset', background: '#fffaf5', primary: '#c2410c' },
+  { id: 'theme-emerald', labelKey: 'theme_emerald', background: '#f4fbf7', primary: '#047857' },
 ];
 
 /** Language and theme changes, shared by the side menu and the login page. */
