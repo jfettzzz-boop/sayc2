@@ -1,0 +1,23 @@
+.login-card {
+  max-width: 420px;
+  margin: 48px auto;
+}
+
+.login-preferences {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+ion-input {
+  margin-bottom: 16px;
+}
+
+.login-error {
+  margin: 0 0 16px;
+}
+
+// Edge adds its own reveal button, which would sit beside ion-input-password-toggle.
+:host ::ng-deep input::-ms-reveal {
+  display: none;
+}

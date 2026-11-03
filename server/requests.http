@@ -1,0 +1,24 @@
+@baseUrl = http://localhost:3000/api/v1
+
+### Test API state
+GET {{baseUrl}}/health
+
+### Login
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@sayc.com",
+  "password": "admin123"
+}
+
+### Request currentuser data
+@authToken = {{loginAdmin.response.body.token}}
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+
+### Search products
+@authToken = {{loginAdmin.response.body.token}}
+GET {{baseUrl}}/products
+Authorization: Bearer {{authToken}}

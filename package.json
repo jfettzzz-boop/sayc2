@@ -9,7 +9,6 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    
     "start": "ng serve --proxy-config proxy.conf.json"
   },
   "private": true,

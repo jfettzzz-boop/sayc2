@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink } from '@ionic/angular';
+import { Component, OnInit, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink, NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { filter, map } from 'rxjs/operators';
 import { 
   searchOutline, searchSharp, search, 
   close, closeCircle, 
@@ -16,11 +18,15 @@ import {
   warningOutline, warningSharp, 
   bookmarkOutline, bookmarkSharp, 
   languageOutline, chevronDownOutline, chevronUpOutline, 
-  colorPaletteOutline, menuOutline 
+  colorPaletteOutline, menuOutline,
+  logOutOutline
 } from 'ionicons/icons';
 
 // Multilanguage
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
+
+import { AuthService } from './auth/auth.service';
+import { LANGUAGES, PreferencesService, THEMES } from './preferences/preferences.service';
 
 @Component({
   selector: 'app-root',
@@ -35,7 +41,22 @@ export class AppComponent implements OnInit {
     { title: 'navigation.searchProducts', url: '/food-search', icon: 'search' },
   ];
   protected readonly labels = ['Extra'];
-  
+  protected readonly languages = LANGUAGES;
+  protected readonly themes = THEMES;
+
+  private readonly auth = inject(AuthService);
+  private readonly nav = inject(NavController);
+  private readonly preferences = inject(PreferencesService);
+
+  /** Hidden until the first navigation ends, so the menu never flashes on the login page. */
+  protected readonly isMenuHidden = toSignal(
+    inject(Router).events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects.split(/[?#]/)[0] === '/login'),
+    ),
+    { initialValue: true },
+  );
+
   protected showLanguageMenu = false;
   protected showThemeMenu = false;
   protected isCollapsed = false;
@@ -58,6 +79,7 @@ export class AppComponent implements OnInit {
       'chevron-up-outline': chevronUpOutline,
       'color-palette-outline': colorPaletteOutline,
       'menu-outline': menuOutline,
+      'log-out-outline': logOutOutline,
       mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp 
     });
   }
@@ -74,7 +96,7 @@ export class AppComponent implements OnInit {
   }
 
   changeLanguage(lang: string) {
-    this.translate.use(lang);
+    this.preferences.setLanguage(lang);
     this.showLanguageMenu = false;
   }
 
@@ -84,16 +106,13 @@ export class AppComponent implements OnInit {
   }
 
   setTheme(theme: string) {
-    document.documentElement.classList.remove('ion-palette-dark', 'theme-sunset', 'theme-emerald');
-    document.body.classList.remove('theme-sunset', 'theme-emerald');
-
-    if (theme === 'dark') {
-      document.documentElement.classList.add('ion-palette-dark');
-    } else if (theme === 'light') {
-    } else {
-      document.body.classList.add(theme);
-    }
+    this.preferences.setTheme(theme);
     this.showThemeMenu = false;
+  }
+
+  logout() {
+    this.auth.clearSession();
+    this.nav.navigateRoot('/login');
   }
 
   toggleCollapse() {

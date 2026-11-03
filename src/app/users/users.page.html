@@ -1,13 +1,180 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>users</ion-title>
+    <ion-title>{{ 'navigation.user_management' | translate }}</ion-title>
+    @if (!loadErrorKey() && !isLoading()) {
+      <ion-buttons slot="end">
+        <ion-button class="new-user" (click)="openEditor(null)">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          {{ 'admin.new_user' | translate }}
+        </ion-button>
+      </ion-buttons>
+    }
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Users</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="ion-text-center ion-padding">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (loadErrorKey(); as key) {
+    <div class="ion-text-center ion-padding">
+      <ion-text color="danger">
+        <p class="load-error">{{ key | translate }}</p>
+      </ion-text>
+      <ion-button fill="outline" (click)="load()">{{ 'errors.RETRY' | translate }}</ion-button>
+    </div>
+  } @else {
+    @if (actionErrorKey(); as key) {
+      <ion-text color="danger">
+        <p class="action-error">{{ key | translate }}</p>
+      </ion-text>
+    }
+
+    @if (users().length === 0) {
+      <p class="ion-text-center">{{ 'admin.no_data' | translate }}</p>
+    }
+
+    <ion-list>
+      @for (user of users(); track user.id) {
+        <ion-item class="user-row" lines="full">
+          <ion-label>
+            <h2>{{ user.user_name }}</h2>
+            <p>{{ user.user_email }}</p>
+            <ion-note>{{ user.role_name }}</ion-note>
+          </ion-label>
+
+          <ion-badge slot="end" [color]="user.user_state === 'activo' ? 'success' : 'medium'">
+            {{ (user.user_state === 'activo' ? 'admin.state_active' : 'admin.state_inactive') | translate }}
+          </ion-badge>
+
+          <ion-button
+            class="edit-user"
+            slot="end"
+            fill="clear"
+            [title]="'admin.edit_user' | translate"
+            [attr.aria-label]="'admin.edit_user' | translate"
+            (click)="openEditor(user)">
+            <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+          </ion-button>
+
+          <!-- The API refuses deactivating your own account. -->
+          @if (!isSelf(user)) {
+            @if (user.user_state === 'activo') {
+              <ion-button
+                class="deactivate-user"
+                slot="end"
+                fill="clear"
+                color="danger"
+                [title]="'admin.deactivate' | translate"
+                [attr.aria-label]="'admin.deactivate' | translate"
+                (click)="confirmDeactivate(user)">
+                <ion-icon slot="icon-only" name="ban-outline"></ion-icon>
+              </ion-button>
+            } @else {
+              <ion-button
+                class="activate-user"
+                slot="end"
+                fill="clear"
+                color="success"
+                [title]="'admin.activate' | translate"
+                [attr.aria-label]="'admin.activate' | translate"
+                (click)="setState(user, 'activo')">
+                <ion-icon slot="icon-only" name="checkmark-circle-outline"></ion-icon>
+              </ion-button>
+            }
+          }
+        </ion-item>
+      }
+    </ion-list>
+
+    @if (hasMore()) {
+      <div class="ion-text-center ion-padding">
+        <ion-button fill="outline" [disabled]="isLoadingMore()" (click)="loadMore()">
+          {{ 'admin.load_more' | translate }}
+        </ion-button>
+      </div>
+    }
+  }
+
+  <ion-modal [isOpen]="editor() !== null" (didDismiss)="closeEditor()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ (editor()?.user ? 'admin.edit_user' : 'admin.new_user') | translate }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <form id="user-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <ion-input
+            formControlName="user_name"
+            maxlength="100"
+            autocomplete="off"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'admin.name' | translate"
+            [errorText]="'validation.required' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="user_email"
+            type="email"
+            inputmode="email"
+            maxlength="150"
+            autocomplete="off"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'email' | translate"
+            [errorText]="emailErrorKey | translate">
+          </ion-input>
+
+          <ion-select
+            formControlName="role_id"
+            interface="popover"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'admin.role' | translate"
+            [errorText]="'validation.required' | translate">
+            @for (role of roles(); track role.id) {
+              <ion-select-option [value]="role.id">{{ role.role_name }}</ion-select-option>
+            }
+          </ion-select>
+
+          <ion-input
+            formControlName="password"
+            type="password"
+            maxlength="72"
+            autocomplete="new-password"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'password' | translate"
+            [helperText]="editor()?.user ? ('admin.password_keep' | translate) : ''"
+            [errorText]="passwordErrorKey | translate">
+            <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+          </ion-input>
+
+          @if (saveErrorKey(); as key) {
+            <ion-text color="danger">
+              <p class="save-error">{{ key | translate }}</p>
+            </ion-text>
+          }
+
+          <!-- ion-button is not a native submit button, so Enter needs this one to submit the form. -->
+          <input type="submit" hidden />
+        </form>
+      </ion-content>
+
+      <ion-footer>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button class="cancel-user" (click)="closeEditor()">{{ 'admin.cancel' | translate }}</ion-button>
+            <ion-button class="save-user" color="primary" fill="solid" [disabled]="isSaving()" (click)="save()">
+              {{ 'admin.save' | translate }}
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-footer>
+    </ng-template>
+  </ion-modal>
 </ion-content>

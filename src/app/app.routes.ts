@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
 
+import { authGuard, guestGuard } from './auth/auth.guard';
+
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'home',
+    redirectTo: 'login',
     pathMatch: 'full',
   },
   {
@@ -17,10 +19,16 @@ export const routes: Routes = [
   },
   {
     path: 'users',
+    canActivate: [authGuard],
     loadComponent: () => import('./users/users.page').then( m => m.UsersPage)
   },
   {
     path: 'food-search',
     loadComponent: () => import('./food-search/food-search.page').then( m => m.FoodSearchPage)
+  },
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./login/login.page').then( m => m.LoginPage)
   },
 ];

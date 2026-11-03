@@ -1,6 +1,6 @@
 <ion-app>
-  <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isCollapsed">
+  <ion-split-pane contentId="main-content" [disabled]="isMenuHidden()">
+    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isCollapsed" [disabled]="isMenuHidden()">
       <ion-content>
         <div class="menu-container">
 
@@ -45,23 +45,13 @@
               </ion-item>
 
               @if (showLanguageMenu && !isCollapsed) {
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="changeLanguage('es')" class="sub-lang-item">
-                    <ion-label>Español (ES)</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
-
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="changeLanguage('en')" class="sub-lang-item">
-                    <ion-label>English (EN)</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
-
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="changeLanguage('fr')" class="sub-lang-item">
-                    <ion-label>Français (FR)</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
+                @for (language of languages; track language.code) {
+                  <ion-menu-toggle auto-hide="false">
+                    <ion-item lines="none" button (click)="changeLanguage(language.code)" class="sub-lang-item">
+                      <ion-label>{{ language.label }}</ion-label>
+                    </ion-item>
+                  </ion-menu-toggle>
+                }
               }
             </ion-list>
 
@@ -77,30 +67,24 @@
               </ion-item>
 
               @if (showThemeMenu && !isCollapsed) {
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="setTheme('light')" class="sub-lang-item">
-                    <ion-label>{{ 'light' | translate }}</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
-
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="setTheme('dark')" class="sub-lang-item">
-                    <ion-label>{{ 'dark' | translate }}</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
-
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="setTheme('theme-sunset')" class="sub-lang-item">
-                    <ion-label>Naranja</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
-
-                <ion-menu-toggle auto-hide="false">
-                  <ion-item lines="none" button (click)="setTheme('theme-emerald')" class="sub-lang-item">
-                    <ion-label>Verde</ion-label>
-                  </ion-item>
-                </ion-menu-toggle>
+                @for (theme of themes; track theme.id) {
+                  <ion-menu-toggle auto-hide="false">
+                    <ion-item lines="none" button (click)="setTheme(theme.id)" class="sub-lang-item">
+                      <ion-label>{{ theme.labelKey | translate }}</ion-label>
+                    </ion-item>
+                  </ion-menu-toggle>
+                }
               }
+            </ion-list>
+
+            <!-- Logout -->
+            <ion-list>
+              <ion-menu-toggle auto-hide="false">
+                <ion-item class="logout-item" lines="none" button (click)="logout()" [title]="'close_session' | translate">
+                  <ion-icon aria-hidden="true" slot="start" name="log-out-outline"></ion-icon>
+                  <ion-label>{{ 'close_session' | translate }}</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
             </ion-list>
           </div>
         </div>

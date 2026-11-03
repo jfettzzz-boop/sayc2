@@ -1,0 +1,24 @@
+ion-list {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+ion-badge {
+  margin-inline-end: 8px;
+}
+
+form > ion-input,
+form > ion-select {
+  margin-bottom: 16px;
+}
+
+.action-error,
+.load-error,
+.save-error {
+  margin: 0 0 16px;
+}
+
+// Edge adds its own reveal button, which would sit beside ion-input-password-toggle.
+:host ::ng-deep input::-ms-reveal {
+  display: none;
+}

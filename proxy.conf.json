@@ -1,4 +1,8 @@
 {
+  "/api/v1": {
+    "target": "http://localhost:3000",
+    "secure": false
+  },
   "/api": {
     "target": "https://world.openfoodfacts.org",
     "secure": false,

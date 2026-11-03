@@ -8,15 +8,17 @@ import { AppComponent } from './app/app.component';
 // Multilanguage
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 // Multilanguage end
+
+import { authInterceptor } from './app/auth/auth.interceptor';
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     
     // Multilanguage Providers
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([authInterceptor])),
     provideTranslateService({
       fallbackLang: 'es',
       loader: provideTranslateHttpLoader({
