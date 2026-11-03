@@ -82,13 +82,13 @@ Todas las rutas requieren `Authorization: Bearer <token>`, excepto `health` y `a
 | POST | `/auth/login` | Público | Devuelve `token` y `user` a partir de `email` y `password` |
 | GET | `/auth/me` | Sesión | Usuario actual |
 | POST | `/auth/change-password` | Sesión | Cambia la contraseña propia |
+| GET | `/dashboard` | Admin | Totales de usuarios, productos y ventas; stock bajo, ventas recientes, productos más vendidos y ajustes recientes |
 | GET, POST | `/users` | Admin | Listar y crear usuarios |
 | GET, PATCH, DELETE | `/users/:id` | Admin | Consultar, editar y desactivar (no se borran) |
 | GET | `/roles` | Admin | Listar roles |
 | GET, POST | `/products` | Sesión | Listar (`q`, `low_stock=true`) y crear productos |
 | GET | `/products/barcode/:barcode` | Sesión | Buscar por código de barras |
-| GET | `/products/:id` | Sesión | Consultar un producto |
-| PATCH, DELETE | `/products/:id` | Admin | Editar y eliminar (409 si tiene historial) |
+| GET, PATCH, DELETE | `/products/:id` | Sesión | Consultar, editar y eliminar (409 si tiene historial) |
 | GET, POST | `/sales` | Sesión | Listar y registrar ventas |
 | GET | `/sales/:id` | Sesión | Venta con su detalle |
 | GET, POST | `/inventory/adjustments` | Sesión | Listar (`product_id`) y registrar ajustes de stock |
@@ -97,6 +97,7 @@ Todas las rutas requieren `Authorization: Bearer <token>`, excepto `health` y `a
 - Los campos usan los mismos nombres que las columnas de `schema.sql`.
 - Registrar una venta: `POST /sales` con `{ "items": [{ "product_id": "...", "quantity": 2 }], "received_pay": 100 }`. Los precios se toman de la base de datos y el stock se descuenta en la misma transacción.
 - El stock solo cambia mediante ventas y ajustes, para conservar el historial.
+- Un ajuste envía `adj_quantity` (sumar o restar cualquier cantidad sobre las existencias actuales) o `adj_new_amount` (cantidad exacta).
 - Un empleado solo ve sus propias ventas.
 - Los errores tienen la forma `{ "error": { "code", "message", "details" } }`.
 

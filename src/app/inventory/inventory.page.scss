@@ -1,0 +1,33 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.filters ion-searchbar {
+  flex: 1 1 280px;
+}
+
+.figures {
+  font-variant-numeric: tabular-nums;
+}
+
+.product-row ion-badge {
+  margin-top: 4px;
+}
+
+.product-row ion-button {
+  margin-inline: 0;
+}
+
+.action-error,
+.load-error {
+  margin: 0 0 16px;
+}

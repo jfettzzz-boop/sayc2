@@ -1,0 +1,79 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 16px;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.sale {
+  margin: 0;
+}
+
+.search-message,
+.cart-empty {
+  padding: 8px 16px;
+}
+
+.quantity {
+  min-width: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-line ion-button {
+  margin-inline: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.row-strong {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ion-text-color, #000);
+}
+
+.total {
+  margin: 12px 0;
+}
+
+.received {
+  margin-bottom: 8px;
+}
+
+.charge-button {
+  margin-top: 12px;
+}
+
+.charge-error,
+.payment-short {
+  margin: 0 0 12px;
+}
+
+.receipt {
+  margin-bottom: 12px;
+}
+
+.receipt-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.receipt-title ion-icon {
+  font-size: 1.25rem;
+}

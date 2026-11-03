@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
 const TOKEN_KEY = 'sayc_token';
 
 export const LOGIN_URL = '/api/v1/auth/login';
+export const ROLE_ADMIN = 'Administrador';
 
 export interface AuthUser {
   id: string;
@@ -36,17 +37,27 @@ export class AuthService {
 
   readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
 
+  /** The signed-in user. authGuard loads it after a page reload, from the API rather than storage. */
+  readonly currentUser = signal<AuthUser | null>(null);
+
+  /** Decides what to show only. The API enforces permissions on every request. */
+  readonly isAdmin = computed(() => this.currentUser()?.role_name === ROLE_ADMIN);
+
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(LOGIN_URL, { email, password }).pipe(
-      tap(({ token }) => {
+      tap(({ token, user }) => {
         localStorage.setItem(TOKEN_KEY, token);
         this.token.set(token);
+        this.currentUser.set(user);
       }),
     );
   }
 
+  /** Fetches the signed-in user, so a changed role is picked up. */
   me(): Observable<AuthUser> {
-    return this.http.get<AuthUser>('/api/v1/auth/me');
+    return this.http.get<AuthUser>('/api/v1/auth/me').pipe(
+      tap((user) => this.currentUser.set(user)),
+    );
   }
 
   /** True while there is an unexpired token. An expired or unreadable one is discarded. */
@@ -59,5 +70,6 @@ export class AuthService {
   clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     this.token.set(null);
+    this.currentUser.set(null);
   }
 }

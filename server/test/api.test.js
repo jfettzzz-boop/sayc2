@@ -231,19 +231,29 @@ describe('SAYC API', { skip }, () => {
       }
     });
 
-    it('allows only administrators to edit, and never stock', async () => {
-      const edit = { product_sell_price: 19 };
-      assert.equal((await call('PATCH', `/products/${LECHE}`, { token: employee, body: edit })).status, 403);
+    it('lets employees and administrators manage products, but never edit stock directly', async () => {
+      const byEmployee = await call('PATCH', `/products/${LECHE}`, { token: employee, body: { product_sell_price: 28.5 } });
+      assert.equal(byEmployee.status, 200);
+      assert.equal(byEmployee.body.product_sell_price, 28.5);
       const res = await call('PATCH', `/products/${LECHE}`, { token: admin, body: { product_sell_price: 29 } });
       assert.equal(res.body.product_sell_price, 29);
+
+      const temporary = await call('POST', '/products', { token: employee, body: { product_name: 'Temporal', product_sell_price: 1 } });
+      assert.equal((await call('DELETE', `/products/${temporary.body.id}`, { token: employee })).status, 204);
+      assert.equal((await call('GET', `/products/${temporary.body.id}`, { token: employee })).status, 404);
+      assert.equal((await call('PATCH', `/products/${LECHE}`, { body: { product_sell_price: 1 } })).status, 401);
+      assert.equal((await call('DELETE', `/products/${LECHE}`)).status, 401);
+
       const stock = await call('PATCH', `/products/${LECHE}`, { token: admin, body: { product_current_stock: 9 } });
       assert.equal(stock.status, 400);
     });
 
-    it('refuses to delete a product with sales history', async () => {
-      const res = await call('DELETE', `/products/${COCA}`, { token: admin });
-      assert.equal(res.status, 409);
-      assert.equal(res.body.error.code, 'RESOURCE_IN_USE');
+    it('refuses to delete a product with sales history, for any role', async () => {
+      for (const token of [admin, employee]) {
+        const res = await call('DELETE', `/products/${COCA}`, { token });
+        assert.equal(res.status, 409);
+        assert.equal(res.body.error.code, 'RESOURCE_IN_USE');
+      }
     });
 
     it('rejects malformed JSON as a client error', async () => {
@@ -355,6 +365,43 @@ describe('SAYC API', { skip }, () => {
     });
   });
 
+  describe('dashboard', () => {
+    it('is restricted to administrators', async () => {
+      assert.equal((await call('GET', '/dashboard')).status, 401);
+      assert.equal((await call('GET', '/dashboard', { token: employee })).status, 403);
+    });
+
+    it('matches the tables', async () => {
+      const { status, body } = await call('GET', '/dashboard', { token: admin });
+      assert.equal(status, 200);
+
+      const one = async (sql) => (await pool.query(sql))[0][0];
+      assert.deepEqual(body.users, await one(
+        `SELECT COUNT(*) AS total, SUM(user_state = 'activo') AS active FROM users`,
+      ));
+      const products = await one(
+        `SELECT COUNT(*) AS total, SUM(product_current_stock <= product_min_stock) AS low_stock,
+                SUM(product_current_stock = 0) AS out_of_stock,
+                SUM(product_current_stock * product_costs) AS inventory_cost FROM products`,
+      );
+      assert.deepEqual(body.products, products);
+      const sales = await one(`SELECT COUNT(*) AS count, SUM(sales_total) AS total FROM sales`);
+      assert.deepEqual(body.sales.today, sales);
+      assert.deepEqual(body.sales.last_30_days, sales);
+      assert.ok(body.sales.today.count > 0);
+
+      assert.equal(body.low_stock_products.length, products.low_stock);
+      assert.ok(body.low_stock_products.every((p) => p.product_current_stock <= p.product_min_stock));
+      assert.ok(body.recent_sales.length > 0 && body.recent_sales.length <= 5);
+      assert.ok(body.recent_sales[0].user_name);
+
+      const quantities = body.top_products.map((p) => p.quantity);
+      assert.deepEqual(quantities, [...quantities].sort((a, b) => b - a));
+      assert.ok(body.top_products.some((p) => p.id === COCA));
+      assert.ok(body.recent_adjustments.some((a) => a.adj_type === 'test'));
+    });
+  });
+
   describe('inventory', () => {
     it('sets the stock and records previous and new amounts', async () => {
       const previous = await stockOf(LECHE);
@@ -370,6 +417,78 @@ describe('SAYC API', { skip }, () => {
 
       const list = await call('GET', `/inventory/adjustments?product_id=${LECHE}`, { token: employee });
       assert.ok(list.body.some((a) => a.id === res.body.id));
+    });
+
+    describe('by a relative quantity', () => {
+      let productId;
+      const adjust = (body, token = employee) =>
+        call('POST', '/inventory/adjustments', { token, body: { product_id: productId, adj_type: 'x', ...body } });
+
+      before(async () => {
+        const created = await call('POST', '/products', {
+          token: admin,
+          body: { product_name: 'Relativo', product_sell_price: 1, product_current_stock: 10 },
+        });
+        productId = created.body.id;
+      });
+
+      it('adds and subtracts any amount, recording both totals', async () => {
+        const added = await adjust({ adj_quantity: 7 });
+        assert.equal(added.status, 201);
+        assert.equal(added.body.adj_previous_amount, 10);
+        assert.equal(added.body.adj_new_amount, 17);
+        assert.equal(await stockOf(productId), 17);
+
+        const removed = await adjust({ adj_quantity: -12 });
+        assert.equal(removed.body.adj_new_amount, 5);
+        assert.equal(await stockOf(productId), 5);
+      });
+
+      it('applies to the current stock, so it never overwrites a concurrent change', async () => {
+        const start = await stockOf(productId);
+        const results = await Promise.all(Array.from({ length: 8 }, () => adjust({ adj_quantity: 1 })));
+        assert.ok(results.every((r) => r.status === 201));
+        assert.equal(await stockOf(productId), start + 8);
+      });
+
+      it('allows subtracting down to 0 but no further, leaving nothing changed', async () => {
+        const start = await stockOf(productId);
+        const [{ count: before }] = (await pool.query(
+          'SELECT COUNT(*) AS count FROM inventory_adjustments WHERE product_id = ?',
+          [productId],
+        ))[0];
+
+        const tooMany = await adjust({ adj_quantity: -(start + 1) });
+        assert.equal(tooMany.status, 409);
+        assert.equal(tooMany.body.error.code, 'STOCK_WOULD_BE_NEGATIVE');
+        assert.equal(tooMany.body.error.details.available, start);
+        assert.equal(await stockOf(productId), start);
+        const [{ count: afterwards }] = (await pool.query(
+          'SELECT COUNT(*) AS count FROM inventory_adjustments WHERE product_id = ?',
+          [productId],
+        ))[0];
+        assert.equal(afterwards, before);
+
+        const toZero = await adjust({ adj_quantity: -start });
+        assert.equal(toZero.status, 201);
+        assert.equal(await stockOf(productId), 0);
+      });
+
+      it('rejects bad requests', async () => {
+        for (const body of [
+          {},
+          { adj_quantity: 0 },
+          { adj_quantity: 1.5 },
+          { adj_quantity: '5' },
+          { adj_quantity: 1, adj_new_amount: 1 },
+        ]) {
+          const res = await adjust(body);
+          assert.equal(res.status, 400, JSON.stringify(body));
+        }
+        await adjust({ adj_new_amount: 2147483647 });
+        assert.equal((await adjust({ adj_quantity: 1 })).status, 400);
+        await adjust({ adj_new_amount: 0 });
+      });
     });
 
     it('returns 404 for an unknown product and rejects negative stock', async () => {

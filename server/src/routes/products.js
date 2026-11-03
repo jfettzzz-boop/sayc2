@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { pool } from '../db.js';
 import { HttpError, notFound } from '../errors.js';
-import { requireAdmin, requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { insertClause, likeContains, money, pagination, setClause } from '../validation.js';
 
 const stockAmount = z.number().int().min(0).max(2147483647);
@@ -109,7 +109,7 @@ productsRouter.post('/', async (req, res) => {
   res.status(201).json(await findProduct(productId));
 });
 
-productsRouter.patch('/:id', requireAdmin, async (req, res) => {
+productsRouter.patch('/:id', async (req, res) => {
   const { sql, values } = setClause(updateSchema.parse(req.body));
   await findProduct(req.params.id);
   try {
@@ -122,7 +122,7 @@ productsRouter.patch('/:id', requireAdmin, async (req, res) => {
 });
 
 // Products with sales or adjustments are protected by foreign keys, which surfaces as a 409.
-productsRouter.delete('/:id', requireAdmin, async (req, res) => {
+productsRouter.delete('/:id', async (req, res) => {
   const [result] = await pool.query('DELETE FROM products WHERE id = ?', [req.params.id]);
   if (result.affectedRows === 0) throw notFound('Product');
   res.status(204).end();

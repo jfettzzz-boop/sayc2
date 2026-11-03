@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { pool } from './db.js';
 import { errorHandler, HttpError } from './errors.js';
 import { authRouter } from './routes/auth.js';
+import { dashboardRouter } from './routes/dashboard.js';
 import { inventoryRouter } from './routes/inventory.js';
 import { productsRouter } from './routes/products.js';
 import { rolesRouter } from './routes/roles.js';
@@ -33,6 +34,7 @@ export function createApp() {
   api.use('/products', productsRouter);
   api.use('/sales', salesRouter);
   api.use('/inventory', inventoryRouter);
+  api.use('/dashboard', dashboardRouter);
 
   app.use('/api/v1', api);
 

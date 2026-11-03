@@ -1,0 +1,24 @@
+.mode {
+  max-width: 640px;
+  margin: 0 auto 16px;
+}
+
+.saved {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+.saved ion-icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+.already-saved {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

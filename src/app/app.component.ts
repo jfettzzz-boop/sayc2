@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink, NavController } from '@ionic/angular';
@@ -19,7 +19,9 @@ import {
   bookmarkOutline, bookmarkSharp, 
   languageOutline, chevronDownOutline, chevronUpOutline, 
   colorPaletteOutline, menuOutline,
-  logOutOutline
+  logOutOutline,
+  cashOutline, cashSharp,
+  cubeOutline, cubeSharp
 } from 'ionicons/icons';
 
 // Multilanguage
@@ -35,11 +37,6 @@ import { LANGUAGES, PreferencesService, THEMES } from './preferences/preferences
   imports: [RouterLink, RouterLinkActive, IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterLink, IonRouterOutlet, TranslatePipe],
 })
 export class AppComponent implements OnInit {
-  protected readonly appPages = [
-    { title: 'titles.dashboard', url: '/home', icon: 'home' },
-    { title: 'admin.users_tab', url: '/users', icon: 'person-circle' },
-    { title: 'navigation.searchProducts', url: '/food-search', icon: 'search' },
-  ];
   protected readonly labels = ['Extra'];
   protected readonly languages = LANGUAGES;
   protected readonly themes = THEMES;
@@ -47,6 +44,14 @@ export class AppComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly nav = inject(NavController);
   private readonly preferences = inject(PreferencesService);
+
+  protected readonly appPages = computed(() => [
+    { title: 'titles.dashboard', url: '/home', icon: 'home' },
+    { title: 'charge.title', url: '/charge', icon: 'cash' },
+    { title: 'inventory.title', url: '/inventory', icon: 'cube' },
+    ...(this.auth.isAdmin() ? [{ title: 'admin.users_tab', url: '/users', icon: 'person-circle' }] : []),
+    { title: 'products_page.title', url: '/food-search', icon: 'search' },
+  ]);
 
   /** Hidden until the first navigation ends, so the menu never flashes on the login page. */
   protected readonly isMenuHidden = toSignal(
@@ -80,6 +85,10 @@ export class AppComponent implements OnInit {
       'color-palette-outline': colorPaletteOutline,
       'menu-outline': menuOutline,
       'log-out-outline': logOutOutline,
+      'cash-outline': cashOutline,
+      'cash-sharp': cashSharp,
+      'cube-outline': cubeOutline,
+      'cube-sharp': cubeSharp,
       mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp 
     });
   }
