@@ -1,21 +1,30 @@
 <ion-app>
-  <ion-split-pane contentId="main-content" [disabled]="isMenuHidden()">
-    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isCollapsed" [disabled]="isMenuHidden()">
+  <ion-split-pane
+    contentId="main-content"
+    [disabled]="isMenuHidden()"
+    (ionSplitPaneVisible)="isPaneVisible.set($event.detail.visible)">
+    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isNarrow" [disabled]="isMenuHidden()">
       <ion-content>
         <div class="menu-container">
 
           <div class="menu-top">
             <ion-list id="inbox-list">
               <div class="menu-header-row">
-                @if (!isCollapsed) {
+                @if (!isNarrow) {
                   <ion-list-header>SAYC</ion-list-header>
                 }
-                <ion-item lines="none" button (click)="toggleCollapse()" class="collapse-item" [title]="'Toggle Menu'">
-                  <ion-icon aria-hidden="true" slot="start" name="menu-outline"></ion-icon>
-                </ion-item>
+                <button
+                  type="button"
+                  class="collapse-button"
+                  [title]="'toggle_menu' | translate"
+                  [attr.aria-label]="'toggle_menu' | translate"
+                  [attr.aria-expanded]="!isNarrow"
+                  (click)="toggleCollapse()">
+                  <ion-icon aria-hidden="true" name="menu-outline"></ion-icon>
+                </button>
               </div>
 
-              @if (!isCollapsed) {
+              @if (!isNarrow) {
                 <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
               }
               
@@ -38,13 +47,13 @@
               <ion-item lines="none" button (click)="toggleLanguageMenu()" [title]="'lang' | translate">
                 <ion-icon aria-hidden="true" slot="start" name="language-outline"></ion-icon>
                 <ion-label>{{ 'lang' | translate }}</ion-label>
-                @if (!isCollapsed) {
+                @if (!isNarrow) {
                   <ion-icon aria-hidden="true" slot="end"
                     [name]="showLanguageMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
                 }
               </ion-item>
 
-              @if (showLanguageMenu && !isCollapsed) {
+              @if (showLanguageMenu && !isNarrow) {
                 @for (language of languages; track language.code) {
                   <ion-menu-toggle auto-hide="false">
                     <ion-item lines="none" button (click)="changeLanguage(language.code)" class="sub-lang-item">
@@ -60,13 +69,13 @@
               <ion-item lines="none" button (click)="toggleThemeMenu()" [title]="'theme' | translate">
                 <ion-icon aria-hidden="true" slot="start" name="color-palette-outline"></ion-icon>
                 <ion-label>{{ 'theme' | translate }}</ion-label>
-                @if (!isCollapsed) {
+                @if (!isNarrow) {
                   <ion-icon aria-hidden="true" slot="end"
                     [name]="showThemeMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
                 }
               </ion-item>
 
-              @if (showThemeMenu && !isCollapsed) {
+              @if (showThemeMenu && !isNarrow) {
                 @for (theme of themes; track theme.id) {
                   <ion-menu-toggle auto-hide="false">
                     <ion-item lines="none" button (click)="setTheme(theme.id)" class="sub-lang-item">

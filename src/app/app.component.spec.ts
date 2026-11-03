@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router, RouterLink } from '@angular/router';
 
+import { MenuController } from '@ionic/angular';
+
 import { AppComponent } from './app.component';
 
 import { provideHttpClient } from '@angular/common/http';
@@ -62,5 +64,49 @@ describe('AppComponent', () => {
     expect(links.length).toEqual(6);
     expect(router.serializeUrl(links[0].urlTree!)).toEqual('/folder/Inbox');
     expect(router.serializeUrl(links[1].urlTree!)).toEqual('/folder/Outbox');
+  });
+
+  describe('menu button', () => {
+    const setup = (paneVisible: boolean) => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance as any;
+      app.isPaneVisible.set(paneVisible);
+      const close = vi.spyOn(TestBed.inject(MenuController), 'close').mockResolvedValue(true);
+      return { app, close };
+    };
+
+    it('narrows and restores a menu beside the page', () => {
+      const { app, close } = setup(true);
+      app.toggleCollapse();
+      expect(app.isNarrow).toBe(true);
+      app.toggleCollapse();
+      expect(app.isNarrow).toBe(false);
+      expect(close).not.toHaveBeenCalled();
+    });
+
+    it('closes a menu opened over the page, without narrowing it', () => {
+      const { app, close } = setup(false);
+      app.toggleCollapse();
+      expect(close).toHaveBeenCalledOnce();
+      expect(app.isNarrow).toBe(false);
+    });
+
+    it('does not carry a narrow menu over to a small screen', () => {
+      const { app } = setup(true);
+      app.toggleCollapse();
+      app.isPaneVisible.set(false);
+      expect(app.isNarrow).toBe(false);
+      app.isPaneVisible.set(true);
+      expect(app.isNarrow).toBe(true);
+    });
+
+    it('closes the open language and theme lists when narrowing', () => {
+      const { app } = setup(true);
+      app.showLanguageMenu = true;
+      app.showThemeMenu = true;
+      app.toggleCollapse();
+      expect(app.showLanguageMenu).toBe(false);
+      expect(app.showThemeMenu).toBe(false);
+    });
   });
 });

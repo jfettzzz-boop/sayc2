@@ -1,7 +1,7 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink, NavController } from '@ionic/angular';
+import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink, MenuController, NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { filter, map } from 'rxjs/operators';
 import { 
@@ -43,6 +43,7 @@ export class AppComponent implements OnInit {
 
   private readonly auth = inject(AuthService);
   private readonly nav = inject(NavController);
+  private readonly menu = inject(MenuController);
   private readonly preferences = inject(PreferencesService);
 
   protected readonly appPages = computed(() => [
@@ -65,6 +66,9 @@ export class AppComponent implements OnInit {
   protected showLanguageMenu = false;
   protected showThemeMenu = false;
   protected isCollapsed = false;
+
+  /** True when the menu sits beside the page. On small screens it opens over the page instead. */
+  protected readonly isPaneVisible = signal(false);
 
   constructor(private translate: TranslateService) {
     addIcons({  
@@ -124,7 +128,17 @@ export class AppComponent implements OnInit {
     this.nav.navigateRoot('/login');
   }
 
+  /** Only a menu beside the page can be narrow, so a collapse doesn't carry over to a small screen. */
+  protected get isNarrow(): boolean {
+    return this.isCollapsed && this.isPaneVisible();
+  }
+
+  /** Narrows the menu beside the page, or closes it when it opened over the page. */
   toggleCollapse() {
+    if (!this.isPaneVisible()) {
+      this.menu.close();
+      return;
+    }
     this.isCollapsed = !this.isCollapsed;
     if (this.isCollapsed) {
       this.showLanguageMenu = false;

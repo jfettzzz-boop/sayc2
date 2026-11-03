@@ -27,6 +27,7 @@
     "lang": "Idioma",
     "light": "Claro",
     "dark": "Oscuro",
+    "toggle_menu": "Contraer o expandir el menú",
     "theme_sunset": "Naranja",
     "theme_emerald": "Verde",
     "logout_confirm_title": "Confirmar cierre de sesión",

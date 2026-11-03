@@ -26,6 +26,7 @@
     "lang": "Langue",
     "light": "Clair",
     "dark": "Sombre",
+    "toggle_menu": "Réduire ou développer le menu",
     "theme_sunset": "Orange",
     "theme_emerald": "Vert",
     "logout_confirm_title": "Confirmer la déconnexion",

@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AlertController, IonBadge, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonInputPasswordToggle, IonItem, IonLabel, IonList, IonModal, IonNote, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar } from '@ionic/angular';
+import { AlertController, IonBadge, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonInputPasswordToggle, IonItem, IonLabel, IonList, IonMenuButton, IonModal, IonNote, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar } from '@ionic/angular';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { addOutline, banOutline, checkmarkCircleOutline, createOutline } from 'ionicons/icons';
@@ -31,7 +31,7 @@ function errorKeyFor(err: HttpErrorResponse): string {
   selector: 'app-users',
   templateUrl: './users.page.html',
   styleUrls: ['./users.page.scss'],
-  imports: [ReactiveFormsModule, IonBadge, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonInputPasswordToggle, IonItem, IonLabel, IonList, IonModal, IonNote, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar, TranslatePipe],
+  imports: [ReactiveFormsModule, IonBadge, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonInputPasswordToggle, IonItem, IonLabel, IonList, IonMenuButton, IonModal, IonNote, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar, TranslatePipe],
 })
 export class UsersPage {
   private readonly usersService = inject(UsersService);

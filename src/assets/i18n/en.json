@@ -26,6 +26,7 @@
     "lang": "Language",
     "light": "Light",
     "dark": "Dark",
+    "toggle_menu": "Collapse or expand the menu",
     "theme_sunset": "Orange",
     "theme_emerald": "Green",
     "logout_confirm_title": "Confirm Logout",
