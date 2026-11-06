@@ -9,6 +9,7 @@ import { Subscription, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import { AuthService } from '../auth/auth.service';
+import { passwordRuleErrorKey, passwordStrength } from '../auth/password';
 import { ManagedUser, Role, USERS_PAGE_SIZE, UserChanges, UsersService } from './users.service';
 
 /** Null while creating, the user being changed while editing. */
@@ -16,12 +17,16 @@ interface Editor {
   user: ManagedUser | null;
 }
 
-const PASSWORD_RULES = [Validators.minLength(8), Validators.maxLength(72)];
+const PASSWORD_RULES = [passwordStrength()];
 const notBlank = Validators.pattern(/\S/);
 
 function errorKeyFor(err: HttpErrorResponse): string {
-  if (err.error?.error?.code === 'AUTH_EMAIL_ALREADY_REGISTERED') {
+  const error = err.error?.error;
+  if (error?.code === 'AUTH_EMAIL_ALREADY_REGISTERED') {
     return 'errors.AUTH_EMAIL_ALREADY_REGISTERED';
+  }
+  if (error?.code === 'VALIDATION_ERROR' && error.details?.some((d: { path: string }) => d.path === 'password')) {
+    return 'errors.AUTH_WEAK_PASSWORD';
   }
   if (err.status === 400) return 'admin.invalid_data';
   return err.status === 0 || err.status >= 500 ? 'errors.SERVER_NOT_REACHED' : 'errors.TRY_AGAIN';
@@ -84,7 +89,9 @@ export class UsersPage {
   }
 
   protected get passwordErrorKey(): string {
-    return this.form.controls.password.hasError('required') ? 'no_password' : 'password_rules.min';
+    return this.form.controls.password.hasError('required')
+      ? 'no_password'
+      : passwordRuleErrorKey(this.form.controls.password);
   }
 
   protected isSelf(user: ManagedUser): boolean {

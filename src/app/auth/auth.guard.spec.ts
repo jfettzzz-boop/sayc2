@@ -1,8 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, CanActivateFn, provideRouter, Router, RouterStateSnapshot } from '@angular/router';
 
-import { authGuard, guestGuard } from './auth.guard';
+import { adminGuard, authGuard, guestGuard } from './auth.guard';
+import { AuthService } from './auth.service';
 
 function tokenExpiringIn(seconds: number): string {
   const payload = btoa(JSON.stringify({ sub: 'id', exp: Math.floor(Date.now() / 1000) + seconds }));
@@ -16,7 +18,7 @@ describe('auth guards', () => {
   const setup = (token?: string) => {
     localStorage.clear();
     if (token) localStorage.setItem('sayc_token', token);
-    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient()] });
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
   };
 
   it('with a valid session: allows protected pages and skips login', () => {
@@ -38,5 +40,38 @@ describe('auth guards', () => {
     setup(token);
     expect(run(guestGuard)).toBe(true);
     expect(localStorage.getItem('sayc_token')).toBeNull();
+  });
+});
+
+describe('adminGuard', () => {
+  const run = () =>
+    TestBed.runInInjectionContext(() =>
+      adminGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot),
+    );
+  const user = (role_name: string) => ({
+    id: 'id', user_name: 'U', user_email: 'u@sayc.com', user_state: 'activo',
+    role_id: 'r', role_name,
+  });
+
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    });
+  });
+
+  it('sends visitors to login', () => {
+    expect(run()!.toString()).toBe(TestBed.inject(Router).createUrlTree(['/login']).toString());
+  });
+
+  it('allows administrators and sends employees home', () => {
+    localStorage.setItem('sayc_token', tokenExpiringIn(60));
+    const auth = TestBed.inject(AuthService);
+
+    auth.user.set(user('Administrador'));
+    expect(run()).toBe(true);
+
+    auth.user.set(user('Empleado'));
+    expect(run()!.toString()).toBe(TestBed.inject(Router).createUrlTree(['/home']).toString());
   });
 });

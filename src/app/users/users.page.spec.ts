@@ -93,7 +93,7 @@ describe('UsersPage', () => {
   it('creates a user, puts it on top and clears the form', () => {
     flushLoad();
     page.openEditor(null);
-    const body = { user_name: 'New', user_email: 'new@sayc.com', role_id: 'role-emp', password: 'password1' };
+    const body = { user_name: 'New', user_email: 'new@sayc.com', role_id: 'role-emp', password: 'Password1!' };
     page.form.setValue(body);
     page.save();
 
@@ -110,7 +110,7 @@ describe('UsersPage', () => {
   it('keeps the form open and explains a duplicate email', () => {
     flushLoad();
     page.openEditor(null);
-    page.form.setValue({ user_name: 'New', user_email: 'admin@sayc.com', role_id: 'role-emp', password: 'password1' });
+    page.form.setValue({ user_name: 'New', user_email: 'admin@sayc.com', role_id: 'role-emp', password: 'Password1!' });
     page.save();
     http.expectOne('/api/v1/users').flush(
       { error: { code: 'AUTH_EMAIL_ALREADY_REGISTERED' } },

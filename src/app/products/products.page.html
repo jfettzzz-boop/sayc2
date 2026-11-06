@@ -1,0 +1,304 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ 'products.title' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button class="new-product" (click)="openEditor(null)">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        {{ 'products.new' | translate }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-searchbar
+    [placeholder]="'products.search_placeholder' | translate"
+    [debounce]="0"
+    (ionInput)="onSearch($event)">
+  </ion-searchbar>
+
+  <ion-item lines="none">
+    <ion-toggle [checked]="lowStockOnly()" (ionChange)="toggleLowStock()">
+      {{ 'products.low_stock_only' | translate }}
+    </ion-toggle>
+  </ion-item>
+
+  @if (isLoading()) {
+    <div class="ion-text-center ion-padding">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (loadErrorKey(); as key) {
+    <div class="ion-text-center ion-padding">
+      <ion-text color="danger">
+        <p class="load-error">{{ key | translate }}</p>
+      </ion-text>
+      <ion-button fill="outline" (click)="load()">{{ 'errors.RETRY' | translate }}</ion-button>
+    </div>
+  } @else {
+    @if (actionErrorKey(); as key) {
+      <ion-text color="danger">
+        <p class="action-error">{{ key | translate }}</p>
+      </ion-text>
+    }
+
+    @if (products().length === 0) {
+      <p class="ion-text-center">{{ 'products.empty' | translate }}</p>
+    }
+
+    <ion-list>
+      @for (product of products(); track product.id) {
+        <ion-item class="product-row" lines="full" [button]="true" (click)="isAdmin && openEditor(product)">
+          @if (product.product_img_url) {
+            <ion-img slot="start" [src]="product.product_img_url" class="product-thumb"></ion-img>
+          } @else {
+            <ion-icon slot="start" name="pricetag-outline" class="product-thumb-icon"></ion-icon>
+          }
+          <ion-label>
+            <h2>{{ product.product_name }}</h2>
+            <p>{{ product.product_brand || ('product.unkown' | translate) }}</p>
+            <ion-note>{{ product.product_barcode || '—' }}</ion-note>
+          </ion-label>
+          <ion-badge
+            slot="end"
+            [color]="isLowStock(product) ? 'warning' : 'medium'">
+            {{ 'products.stock' | translate }}: {{ product.product_current_stock }}
+          </ion-badge>
+          <ion-note slot="end" class="product-price">${{ product.product_sell_price | number: '1.2-2' }}</ion-note>
+
+          <ion-button
+            class="adjust-stock"
+            slot="end"
+            fill="clear"
+            [title]="'products.adjust_stock' | translate"
+            [attr.aria-label]="'products.adjust_stock' | translate"
+            (click)="openAdjust(product); $event.stopPropagation()">
+            <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+          </ion-button>
+
+          @if (isAdmin) {
+            <ion-button
+              class="edit-product"
+              slot="end"
+              fill="clear"
+              [title]="'products.edit' | translate"
+              [attr.aria-label]="'products.edit' | translate"
+              (click)="openEditor(product); $event.stopPropagation()">
+              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button
+              class="delete-product"
+              slot="end"
+              fill="clear"
+              color="danger"
+              [title]="'products.delete' | translate"
+              [attr.aria-label]="'products.delete' | translate"
+              (click)="confirmDelete(product); $event.stopPropagation()">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+      }
+    </ion-list>
+
+    @if (hasMore()) {
+      <div class="ion-text-center ion-padding">
+        <ion-button fill="outline" [disabled]="isLoadingMore()" (click)="loadMore()">
+          {{ 'admin.load_more' | translate }}
+        </ion-button>
+      </div>
+    }
+  }
+
+  <!-- Product create/edit modal -->
+  <ion-modal [isOpen]="editor() !== null" (didDismiss)="closeEditor()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ (editor()?.product ? 'products.edit' : 'products.new') | translate }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <form id="product-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <ion-input
+            formControlName="product_name"
+            maxlength="150"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.name' | translate"
+            [errorText]="'validation.required' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="product_barcode"
+            maxlength="100"
+            inputmode="numeric"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.barcode' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="product_brand"
+            maxlength="100"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.brand' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="product_sell_price"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.01"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.sell_price' | translate"
+            [errorText]="'validation.required' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="product_costs"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.01"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.costs' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="product_min_stock"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.min_stock' | translate">
+          </ion-input>
+
+          @if (!editor()?.product) {
+            <ion-input
+              formControlName="product_current_stock"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              fill="outline"
+              labelPlacement="floating"
+              [label]="'products.current_stock' | translate">
+            </ion-input>
+          }
+
+          <ion-input
+            formControlName="product_img_url"
+            type="url"
+            maxlength="255"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.image_url' | translate">
+          </ion-input>
+
+          <ion-input
+            formControlName="product_description"
+            maxlength="5000"
+            fill="outline"
+            labelPlacement="floating"
+            [label]="'products.description' | translate">
+          </ion-input>
+
+          @if (saveErrorKey(); as key) {
+            <ion-text color="danger">
+              <p class="save-error">{{ key | translate }}</p>
+            </ion-text>
+          }
+
+          <input type="submit" hidden />
+        </form>
+      </ion-content>
+
+      <ion-footer>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button class="cancel-product" (click)="closeEditor()">{{ 'admin.cancel' | translate }}</ion-button>
+            <ion-button class="save-product" color="primary" fill="solid" [disabled]="isSaving()" (click)="save()">
+              {{ 'admin.save' | translate }}
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-footer>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Stock adjustment modal -->
+  <ion-modal [isOpen]="adjustTarget() !== null" (didDismiss)="closeAdjust()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ 'products.adjust_title' | translate }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        @if (adjustTarget(); as product) {
+          <p>
+            <strong>{{ product.product_name }}</strong><br />
+            <ion-note>{{ 'products.stock' | translate }}: {{ product.product_current_stock }}</ion-note>
+          </p>
+
+          <form id="adjust-form" [formGroup]="adjustForm" (ngSubmit)="saveAdjustment()" novalidate>
+            <ion-input
+              formControlName="adj_new_amount"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              fill="outline"
+              labelPlacement="floating"
+              [label]="'products.new_amount' | translate"
+              [errorText]="'validation.required' | translate">
+            </ion-input>
+
+            <ion-select
+              formControlName="adj_type"
+              interface="popover"
+              fill="outline"
+              labelPlacement="floating"
+              [label]="'products.adjust_type' | translate">
+              @for (type of adjustmentTypes; track type) {
+                <ion-select-option [value]="type">{{ 'products.type_' + type | translate }}</ion-select-option>
+              }
+            </ion-select>
+
+            <ion-input
+              formControlName="adj_motive"
+              maxlength="5000"
+              fill="outline"
+              labelPlacement="floating"
+              [label]="'products.motive' | translate">
+            </ion-input>
+
+            @if (adjustErrorKey(); as key) {
+              <ion-text color="danger">
+                <p class="save-error">{{ key | translate }}</p>
+              </ion-text>
+            }
+
+            <input type="submit" hidden />
+          </form>
+        }
+      </ion-content>
+
+      <ion-footer>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button class="cancel-adjust" (click)="closeAdjust()">{{ 'admin.cancel' | translate }}</ion-button>
+            <ion-button class="save-adjust" color="primary" fill="solid" [disabled]="isAdjusting()" (click)="saveAdjustment()">
+              {{ 'admin.save' | translate }}
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-footer>
+    </ng-template>
+  </ion-modal>
+</ion-content>

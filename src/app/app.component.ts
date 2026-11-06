@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink, NavController } from '@ionic/angular';
@@ -19,7 +19,7 @@ import {
   bookmarkOutline, bookmarkSharp, 
   languageOutline, chevronDownOutline, chevronUpOutline, 
   colorPaletteOutline, menuOutline,
-  logOutOutline
+  logOutOutline, cartOutline, pricetagsOutline
 } from 'ionicons/icons';
 
 // Multilanguage
@@ -28,6 +28,15 @@ import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from './auth/auth.service';
 import { LANGUAGES, PreferencesService, THEMES } from './preferences/preferences.service';
 
+interface AppPage {
+  title: string;
+  url: string;
+  icon: string;
+  adminOnly?: boolean;
+}
+
+const ADMIN_ROLE = 'Administrador';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -35,11 +44,18 @@ import { LANGUAGES, PreferencesService, THEMES } from './preferences/preferences
   imports: [RouterLink, RouterLinkActive, IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterLink, IonRouterOutlet, TranslatePipe],
 })
 export class AppComponent implements OnInit {
-  protected readonly appPages = [
+  protected readonly appPages: AppPage[] = [
     { title: 'titles.dashboard', url: '/home', icon: 'home' },
-    { title: 'admin.users_tab', url: '/users', icon: 'person-circle' },
+    { title: 'nav.sell', url: '/sales', icon: 'cart' },
+    { title: 'nav.products', url: '/products', icon: 'pricetags' },
     { title: 'navigation.searchProducts', url: '/food-search', icon: 'search' },
+    { title: 'admin.users_tab', url: '/users', icon: 'person-circle', adminOnly: true },
   ];
+
+  protected readonly visiblePages = computed(() => {
+    const isAdmin = this.auth.user()?.role_name === ADMIN_ROLE;
+    return this.appPages.filter((page) => !page.adminOnly || isAdmin);
+  });
   protected readonly labels = ['Extra'];
   protected readonly languages = LANGUAGES;
   protected readonly themes = THEMES;
@@ -47,6 +63,7 @@ export class AppComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly nav = inject(NavController);
   private readonly preferences = inject(PreferencesService);
+  private readonly translate = inject(TranslateService);
 
   /** Hidden until the first navigation ends, so the menu never flashes on the login page. */
   protected readonly isMenuHidden = toSignal(
@@ -61,7 +78,7 @@ export class AppComponent implements OnInit {
   protected showThemeMenu = false;
   protected isCollapsed = false;
 
-  constructor(private translate: TranslateService) {
+  constructor() {
     addIcons({  
       'search': search,
       'search-outline': searchOutline,
@@ -80,6 +97,8 @@ export class AppComponent implements OnInit {
       'color-palette-outline': colorPaletteOutline,
       'menu-outline': menuOutline,
       'log-out-outline': logOutOutline,
+      'cart-outline': cartOutline,
+      'pricetags-outline': pricetagsOutline,
       mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp 
     });
   }
@@ -88,7 +107,12 @@ export class AppComponent implements OnInit {
     this.translate.addLangs(['es', 'en', 'fr']);
     this.translate.setFallbackLang('es');
     const browserLang = this.translate.getBrowserLang();
-    this.translate.use(browserLang && browserLang.match(/es|en|fr/) ? browserLang : 'fr');
+    this.translate.use(browserLang && browserLang.match(/es|en|fr/) ? browserLang : 'es');
+
+    // Restore the profile so the menu can filter by role after a reload.
+    if (this.auth.isAuthenticated() && !this.auth.user()) {
+      this.auth.loadUser().subscribe({ error: () => undefined });
+    }
   }
 
   toggleLanguageMenu() {

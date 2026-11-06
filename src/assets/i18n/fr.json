@@ -230,7 +230,9 @@
         "AUTH_WEAK_PASSWORD": "Mot de passe non valide.",
         "GOOGLE_AUTH_FAILED": "Échec de l'authentification Google",
         "NOT_FOUND": "Page introuvable",
-        "BACK": "Retour"
+        "BACK": "Retour",
+        "BARCODE_ALREADY_REGISTERED": "Un produit avec ce code-barres existe déjà.",
+        "PRODUCT_IN_USE": "Le produit a des ventes ou des ajustements et ne peut pas être supprimé."
     },
     "admin": {
         "title": "Administration du Système",
@@ -340,5 +342,60 @@
         "confirm": "Confirmer",
         "weak_password": "Le mot de passe ne respecte pas les exigences de sécurité",
         "user_not_found": "Utilisateur non trouvé"
+    },
+    "nav": {
+        "sell": "Encaissement",
+        "products": "Produits"
+    },
+    "products": {
+        "title": "Produits",
+        "new": "Nouveau",
+        "search_placeholder": "Rechercher par nom, marque ou code-barres",
+        "low_stock_only": "Stock faible uniquement",
+        "stock": "Stock",
+        "empty": "Aucun produit trouvé.",
+        "load_error": "Impossible de charger les produits.",
+        "invalid_data": "Vérifiez les données du produit.",
+        "name": "Nom",
+        "barcode": "Code-barres",
+        "brand": "Marque",
+        "sell_price": "Prix de vente",
+        "costs": "Coût",
+        "min_stock": "Stock minimum",
+        "current_stock": "Stock initial",
+        "image_url": "URL de l'image",
+        "description": "Description",
+        "edit": "Modifier le produit",
+        "delete": "Supprimer le produit",
+        "confirm_delete": "Supprimer ce produit ? Action irréversible.",
+        "adjust_title": "Ajustement de stock",
+        "adjust_stock": "Ajuster le stock",
+        "adjust_type": "Type d'ajustement",
+        "new_amount": "Nouvelle quantité",
+        "motive": "Motif",
+        "type_entrada": "Entrée",
+        "type_salida": "Sortie",
+        "type_conteo": "Inventaire"
+    },
+    "pos": {
+        "title": "Encaissement",
+        "tab_sell": "Vente",
+        "tab_history": "Historique",
+        "search_placeholder": "Rechercher un produit à ajouter",
+        "out_of_stock": "Épuisé",
+        "cart_empty": "Le panier est vide. Recherchez un produit pour commencer.",
+        "stock": "Stock",
+        "clear_cart": "Vider le panier",
+        "total": "Total",
+        "change": "Monnaie",
+        "received": "Espèces reçues",
+        "charge": "Encaisser",
+        "sale_completed": "Vente enregistrée",
+        "sale_detail": "Détail de la vente",
+        "insufficient_payment": "Le paiement ne couvre pas le total.",
+        "insufficient_stock": "Stock insuffisant pour l'un des produits.",
+        "product_not_found": "Un produit de la vente n'existe plus.",
+        "invalid_data": "Vérifiez les données de la vente.",
+        "no_sales": "Aucune vente enregistrée."
     }
 }

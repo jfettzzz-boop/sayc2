@@ -6,7 +6,13 @@ import { HttpError } from '../errors.js';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { hashPassword, verifyPassword } from '../passwords.js';
 
-export const newPassword = z.string().min(8).max(72);
+// Policy from the project spec: 8+ chars with lower, upper, digit and symbol.
+// The 72-char cap matches bcrypt's input limit.
+export const newPassword = z
+  .string()
+  .min(8)
+  .max(72)
+  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/, 'Password does not meet complexity requirements.');
 
 const loginSchema = z.strictObject({
   email: z.string().trim().toLowerCase().max(150),

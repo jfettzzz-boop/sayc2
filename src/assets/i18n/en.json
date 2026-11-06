@@ -229,7 +229,9 @@
         "AUTH_WEAK_PASSWORD": "Weak password.",
         "GOOGLE_AUTH_FAILED": "Google authentication failed",
         "NOT_FOUND": "Page not found",
-        "BACK": "Go Back"
+        "BACK": "Go Back",
+        "BARCODE_ALREADY_REGISTERED": "A product with that barcode already exists.",
+        "PRODUCT_IN_USE": "The product has sales or adjustments and cannot be deleted."
     },
     "admin": {
         "title": "System Administration",
@@ -339,5 +341,60 @@
         "confirm": "Confirm",
         "weak_password": "Password does not meet security requirements",
         "user_not_found": "User not found"
+    },
+    "nav": {
+        "sell": "Checkout",
+        "products": "Products"
+    },
+    "products": {
+        "title": "Products",
+        "new": "New",
+        "search_placeholder": "Search by name, brand or barcode",
+        "low_stock_only": "Low stock only",
+        "stock": "Stock",
+        "empty": "No products found.",
+        "load_error": "Could not load products.",
+        "invalid_data": "Check the product data.",
+        "name": "Name",
+        "barcode": "Barcode",
+        "brand": "Brand",
+        "sell_price": "Sale price",
+        "costs": "Cost",
+        "min_stock": "Minimum stock",
+        "current_stock": "Initial stock",
+        "image_url": "Image URL",
+        "description": "Description",
+        "edit": "Edit product",
+        "delete": "Delete product",
+        "confirm_delete": "Delete this product? This cannot be undone.",
+        "adjust_title": "Inventory adjustment",
+        "adjust_stock": "Adjust stock",
+        "adjust_type": "Adjustment type",
+        "new_amount": "New quantity",
+        "motive": "Reason",
+        "type_entrada": "Entry",
+        "type_salida": "Exit",
+        "type_conteo": "Stock count"
+    },
+    "pos": {
+        "title": "Checkout",
+        "tab_sell": "Sale",
+        "tab_history": "History",
+        "search_placeholder": "Search product to add",
+        "out_of_stock": "Out of stock",
+        "cart_empty": "The cart is empty. Search for a product to start.",
+        "stock": "Stock",
+        "clear_cart": "Clear cart",
+        "total": "Total",
+        "change": "Change",
+        "received": "Cash received",
+        "charge": "Charge",
+        "sale_completed": "Sale registered",
+        "sale_detail": "Sale detail",
+        "insufficient_payment": "The payment does not cover the total.",
+        "insufficient_stock": "There is not enough stock for one of the products.",
+        "product_not_found": "A product in the sale no longer exists.",
+        "invalid_data": "Check the sale data.",
+        "no_sales": "No sales recorded yet."
     }
 }

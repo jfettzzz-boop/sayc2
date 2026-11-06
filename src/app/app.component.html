@@ -19,7 +19,7 @@
                 <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
               }
               
-              @for (p of appPages; track p; let i = $index) {
+              @for (p of visiblePages(); track p; let i = $index) {
                 <ion-menu-toggle auto-hide="false">
                   <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false"
                     routerLinkActive="selected" [title]="p.title | translate">

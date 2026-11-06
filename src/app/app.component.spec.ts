@@ -1,16 +1,23 @@
 import { TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { provideRouter, Router, RouterLink } from '@angular/router';
 
 import { AppComponent } from './app.component';
+import { AuthService } from './auth/auth.service';
 
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 
+const ADMIN = {
+  id: 'admin-id', user_name: 'Admin', user_email: 'admin@sayc.com', user_state: 'activo',
+  role_id: 'role-admin', role_name: 'Administrador',
+};
+const EMPLOYEE = { ...ADMIN, id: 'emp-id', role_name: 'Empleado' };
+
 describe('AppComponent', () => {
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
@@ -34,33 +41,19 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should have menu labels', async () => {
+  it('hides admin-only pages for employees and guests', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    // ion-label is a scoped Stencil component whose slot content is relocated
-    // asynchronously, so wait for hydration before reading textContent (ROU-10799).
-    await fixture.whenStable();
-    const app = fixture.nativeElement;
-    const menuItems = app.querySelectorAll('ion-label');
-    expect(menuItems.length).toEqual(12);
-    expect(menuItems[0].innerHTML).toContain('Inbox');
-    expect(menuItems[1].innerHTML).toContain('Outbox');
-  });
+    const app = fixture.componentInstance as any;
+    const urls = () => app.visiblePages().map((p: { url: string }) => p.url);
 
-  it('should have urls', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const app = fixture.nativeElement;
-    expect(app.querySelectorAll('ion-item').length).toEqual(12);
-    // Ionic applies the rendered href through its own async write queue, so
-    // reading the DOM attribute is flaky (FW-6264). Assert the routerLink
-    // binding directly, which resolves synchronously.
-    const router = TestBed.inject(Router);
-    const links = fixture.debugElement
-      .queryAll(By.directive(RouterLink))
-      .map((el) => el.injector.get(RouterLink));
-    expect(links.length).toEqual(6);
-    expect(router.serializeUrl(links[0].urlTree!)).toEqual('/folder/Inbox');
-    expect(router.serializeUrl(links[1].urlTree!)).toEqual('/folder/Outbox');
+    expect(urls()).not.toContain('/users');
+    expect(urls()).toContain('/sales');
+    expect(urls()).toContain('/products');
+
+    TestBed.inject(AuthService).user.set(EMPLOYEE);
+    expect(urls()).not.toContain('/users');
+
+    TestBed.inject(AuthService).user.set(ADMIN);
+    expect(urls()).toContain('/users');
   });
 });

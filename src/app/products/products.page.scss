@@ -1,0 +1,23 @@
+.product-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.product-thumb-icon {
+  font-size: 32px;
+  margin: 8px;
+  opacity: 0.5;
+}
+
+.product-price {
+  font-weight: 600;
+  margin-inline-end: 8px;
+}
+
+.load-error,
+.action-error,
+.save-error {
+  text-align: center;
+}
