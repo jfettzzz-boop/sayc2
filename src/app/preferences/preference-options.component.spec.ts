@@ -48,4 +48,16 @@ describe('PreferenceOptionsComponent', () => {
     el.querySelectorAll<HTMLElement>('.option')[2].click();
     expect(setTheme).toHaveBeenCalledWith('theme-sunset');
   });
+
+  it('replaces the previous theme instead of stacking them', () => {
+    render('theme');
+    const preferences = TestBed.inject(PreferencesService);
+    preferences.setTheme('theme-purple');
+    expect(document.body.classList).toContain('theme-purple');
+    preferences.setTheme('theme-emerald');
+    expect(document.body.classList).not.toContain('theme-purple');
+    expect(document.body.classList).toContain('theme-emerald');
+    preferences.setTheme('light');
+    expect(document.body.className).not.toMatch(/theme-/);
+  });
 });

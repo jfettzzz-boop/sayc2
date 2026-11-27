@@ -13,7 +13,10 @@ export const THEMES = [
   { id: 'dark', labelKey: 'dark', background: '#121212', primary: '#4d8dff' },
   { id: 'theme-sunset', labelKey: 'theme_sunset', background: '#fffaf5', primary: '#c2410c' },
   { id: 'theme-emerald', labelKey: 'theme_emerald', background: '#f4fbf7', primary: '#047857' },
+  { id: 'theme-purple', labelKey: 'theme_purple', background: '#faf7fd', primary: '#7e22ce' },
 ];
+
+const THEME_CLASSES = THEMES.map((t) => t.id).filter((id) => id.startsWith('theme-'));
 
 /** Language and theme changes, shared by the side menu and the login page. */
 @Injectable({ providedIn: 'root' })
@@ -25,8 +28,8 @@ export class PreferencesService {
   }
 
   setTheme(theme: string) {
-    document.documentElement.classList.remove('ion-palette-dark', 'theme-sunset', 'theme-emerald');
-    document.body.classList.remove('theme-sunset', 'theme-emerald');
+    document.documentElement.classList.remove('ion-palette-dark', ...THEME_CLASSES);
+    document.body.classList.remove(...THEME_CLASSES);
 
     if (theme === 'dark') {
       document.documentElement.classList.add('ion-palette-dark');

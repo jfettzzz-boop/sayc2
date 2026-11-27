@@ -29,6 +29,7 @@
     "toggle_menu": "Réduire ou développer le menu",
     "theme_sunset": "Orange",
     "theme_emerald": "Vert",
+    "theme_purple": "Violet",
     "logout_confirm_title": "Confirmer la déconnexion",
     "logout_confirm_message": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "session_expired_title": "Session terminée",

@@ -29,6 +29,7 @@
     "toggle_menu": "Collapse or expand the menu",
     "theme_sunset": "Orange",
     "theme_emerald": "Green",
+    "theme_purple": "Purple",
     "logout_confirm_title": "Confirm Logout",
     "logout_confirm_message": "Are you sure you want to log out?",
     "session_expired_title": "Session Terminated",
