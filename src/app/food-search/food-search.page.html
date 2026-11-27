@@ -1,60 +1,102 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>{{ 'product_search' | translate }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'products_page.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-searchbar
-    [value]="searchTerm"
-    (ionInput)="onSearchChange($event)"
-    placeholder="Busca un producto..."
-    [debounce]="0">
-  </ion-searchbar>
+  <ion-segment class="mode" [value]="mode()" (ionChange)="onModeChange($event.detail.value)">
+    <ion-segment-button class="tab-search" value="search">
+      <ion-label>{{ 'products_page.tab_search' | translate }}</ion-label>
+    </ion-segment-button>
+    <ion-segment-button class="tab-add" value="add">
+      <ion-label>{{ 'products_page.tab_add' | translate }}</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
-  @if (isLoading) {
-    <div class="ion-text-center ion-padding">
-      <ion-spinner name="crescent"></ion-spinner>
-      <p>{{ 'product.looking' | translate }}</p>
-    </div>
+  @if (savedName(); as name) {
+    <p class="saved" role="status">
+      <ion-icon aria-hidden="true" color="success" name="checkmark-circle-outline"></ion-icon>
+      {{ 'products_page.saved' | translate }}: {{ name }}
+    </p>
   }
 
-  @if (hasError && !isLoading) {
-    <div class="ion-text-center ion-padding" color="danger">
-      <p style="color: var(--ion-color-danger);">{{ 'errors.TRY_AGAIN' | translate }}</p>
-    </div>
-  }
+  <!-- Both stay rendered, so changing tabs keeps the results and anything typed in the form. -->
+  <div [hidden]="mode() !== 'search'">
+    <ion-searchbar
+      [value]="searchTerm"
+      (ionInput)="onSearchChange($event)"
+      [placeholder]="'products_page.search_placeholder' | translate"
+      [debounce]="0">
+    </ion-searchbar>
 
-  @if (!isLoading && products.length > 0) {
-    <ion-list>
-      @for (product of products; track $index) {
-        <ion-item lines="inset">
-          <ion-thumbnail slot="start">
-            <img [src]="product.image_front_small_url || 'assets/ensavoirplus.gif'" [alt]="product.product_name" />
-          </ion-thumbnail>
-          <ion-label>
-            <h2>{{ product.product_name || 'Producto sin nombre' }}</h2>
-            <p><strong>Marca:</strong> {{ product.brands || 'Desconocida' }}</p>
-            <ion-note color="medium">Cantidad: {{ product.quantity || 'N/D' }}</ion-note>
-          </ion-label>
+    @if (isLoading) {
+      <div class="ion-text-center ion-padding">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>{{ 'product.looking' | translate }}</p>
+        @if (waitSeconds() > 0) {
+          <ion-note class="search-wait" color="medium">{{ 'products_page.waiting' | translate: { seconds: waitSeconds() } }}</ion-note>
+        }
+      </div>
+    } @else if (hasError) {
+      <div class="ion-text-center ion-padding">
+        <ion-text color="danger">
+          <p class="search-error">{{ 'errors.TRY_AGAIN' | translate }}</p>
+        </ion-text>
+        <ion-button class="search-retry" [disabled]="waitSeconds() > 0" (click)="retry()">
+          <ion-icon slot="start" name="refresh-outline"></ion-icon>
+          @if (waitSeconds() > 0) {
+            {{ 'products_page.retry_in' | translate: { seconds: waitSeconds() } }}
+          } @else {
+            {{ 'errors.RETRY' | translate }}
+          }
+        </ion-button>
+        <ion-button fill="outline" (click)="addManually()">{{ 'products_page.add_manually' | translate }}</ion-button>
+      </div>
+    } @else if (hasSearched && products.length === 0) {
+      <div class="ion-text-center ion-padding">
+        <p class="no-results">{{ 'products_page.no_results' | translate }}</p>
+        <ion-button fill="outline" (click)="addManually()">{{ 'products_page.add_manually' | translate }}</ion-button>
+      </div>
+    } @else {
+      <ion-list>
+        @for (product of products; track $index) {
+          <ion-item class="off-result" lines="inset">
+            <ion-thumbnail slot="start">
+              <img [src]="product.image_front_small_url || 'assets/ensavoirplus.gif'" [alt]="product.product_name" />
+            </ion-thumbnail>
+            <ion-label>
+              <h2>{{ product.product_name || ('products_page.unnamed' | translate) }}</h2>
+              <p><strong>{{ 'product.brands' | translate }}:</strong> {{ product.brands || ('product.unkown' | translate) }}</p>
+              <ion-note color="medium">{{ 'product.quantity' | translate }}: {{ product.quantity || ('product.unkown' | translate) }}</ion-note>
+            </ion-label>
 
-          <!-- Add to inventory button -->
-          <ion-button slot="end" fill="clear" color="primary" (click)="addToInventory(product)" title="Añadir al inventario">
-            <ion-icon slot="icon-only" ios="add-circle-outline" md="add-sharp"></ion-icon>
-          </ion-button>
-        </ion-item>
-      }
-    </ion-list>
-  }
+            @if (isSaved(product)) {
+              <ion-note class="already-saved" slot="end">
+                <ion-icon aria-hidden="true" color="success" name="checkmark-circle-outline"></ion-icon>
+                {{ 'products_page.added' | translate }}
+              </ion-note>
+            } @else {
+              <ion-button class="add-result" slot="end" fill="outline" (click)="addToInventory(product)">
+                <ion-icon slot="start" name="add-outline"></ion-icon>
+                {{ 'products_page.add' | translate }}
+              </ion-button>
+            }
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
 
-  @if (hasSearched && !isLoading && products.length === 0 && !hasError) {
-    <div class="ion-text-center ion-padding">
-      <p>No se encontraron productos.</p>
-    </div>
-  }
-  @if (hasError) {
-    <div class="ion-text-center ion-padding text-danger">
-      <p>Ocurrió un error al conectar con Open Food Facts. Inténtalo de nuevo.</p>
-    </div>
-  }
+  <div [hidden]="mode() !== 'add'">
+    <app-product-form
+      [draft]="draft()"
+      [cancellable]="draft() !== null"
+      (saved)="onSaved($event)"
+      (cancelled)="onCancelled()">
+    </app-product-form>
+  </div>
 </ion-content>

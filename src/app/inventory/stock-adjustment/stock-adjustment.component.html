@@ -1,0 +1,130 @@
+<p class="current-stock">
+  {{ 'inventory.current_stock' | translate }}: <strong>{{ product().product_current_stock }}</strong>
+</p>
+
+<ion-segment class="mode" [value]="mode()" (ionChange)="onModeChange($event.detail.value)">
+  <ion-segment-button class="mode-change" value="change">
+    <ion-label>{{ 'inventory.mode_change' | translate }}</ion-label>
+  </ion-segment-button>
+  <ion-segment-button class="mode-set" value="set">
+    <ion-label>{{ 'inventory.mode_set' | translate }}</ion-label>
+  </ion-segment-button>
+</ion-segment>
+
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  @if (mode() === 'change') {
+    <div class="increments">
+      @for (increment of increments; track increment) {
+        <ion-button
+          class="increment"
+          fill="outline"
+          size="small"
+          [color]="increment > 0 ? 'primary' : 'medium'"
+          (click)="applyIncrement(increment)">
+          {{ incrementLabel(increment) }}
+        </ion-button>
+      }
+    </div>
+
+    <ion-input
+      formControlName="adj_quantity"
+      type="number"
+      inputmode="numeric"
+      step="1"
+      fill="outline"
+      labelPlacement="floating"
+      [label]="('inventory.quantity' | translate) + ' *'"
+      [helperText]="'inventory.quantity_help' | translate"
+      [errorText]="quantityErrorKey | translate">
+    </ion-input>
+  } @else {
+    <ion-input
+      formControlName="adj_new_amount"
+      type="number"
+      inputmode="numeric"
+      min="0"
+      step="1"
+      fill="outline"
+      labelPlacement="floating"
+      [label]="('inventory.new_stock' | translate) + ' *'"
+      [errorText]="amountErrorKey | translate">
+    </ion-input>
+  }
+
+  @if (resultingStock(); as resulting) {
+    <p class="resulting" [class.resulting-negative]="resulting < 0">
+      {{ 'inventory.resulting' | translate }}:
+      <strong>{{ product().product_current_stock }} → {{ resulting }}</strong>
+    </p>
+  } @else if (resultingStock() === 0) {
+    <p class="resulting">
+      {{ 'inventory.resulting' | translate }}:
+      <strong>{{ product().product_current_stock }} → 0</strong>
+    </p>
+  }
+
+  <ion-select
+    formControlName="adj_type"
+    interface="popover"
+    fill="outline"
+    labelPlacement="floating"
+    [label]="('inventory.adj_type' | translate) + ' *'"
+    [errorText]="'validation.required' | translate">
+    @for (type of types; track type) {
+      <ion-select-option [value]="type">{{ typeLabel(type) | translate }}</ion-select-option>
+    }
+  </ion-select>
+
+  <ion-textarea
+    formControlName="adj_motive"
+    maxlength="5000"
+    rows="2"
+    fill="outline"
+    labelPlacement="floating"
+    [label]="'inventory.motive' | translate">
+  </ion-textarea>
+
+  @if (errorKey(); as key) {
+    <ion-text color="danger" role="alert">
+      <p class="adjust-error">{{ key | translate }}</p>
+    </ion-text>
+  }
+
+  <div class="actions">
+    <ion-button class="cancel-adjustment" fill="clear" (click)="cancelled.emit()">
+      {{ 'common.cancel' | translate }}
+    </ion-button>
+    <ion-button class="save-adjustment" type="submit" [disabled]="isSaving()">
+      @if (isSaving()) {
+        <ion-spinner name="crescent"></ion-spinner>
+      } @else {
+        {{ 'admin.save' | translate }}
+      }
+    </ion-button>
+  </div>
+
+  <!-- ion-button is not a native submit button, so Enter needs this one to submit the form. -->
+  <input type="submit" hidden />
+</form>
+
+<h3 class="history-title">{{ 'inventory.history' | translate }}</h3>
+@if (historyFailed()) {
+  <p>{{ 'admin.load_error' | translate }}</p>
+} @else if (history().length === 0) {
+  <p class="history-empty">{{ 'inventory.no_history' | translate }}</p>
+} @else {
+  <ion-list lines="full">
+    @for (entry of history(); track entry.id) {
+      <ion-item class="history-entry">
+        <ion-label>
+          <h3>{{ typeLabel(entry.adj_type) | translate }}</h3>
+          <p>{{ entry.user_name }} · {{ entry.adj_date | date:'dd/MM/yyyy HH:mm' }}</p>
+          @if (entry.adj_motive) {
+            <p>{{ entry.adj_motive }}</p>
+          }
+        </ion-label>
+        <ion-note slot="end">{{ entry.adj_previous_amount }} → {{ entry.adj_new_amount }}</ion-note>
+      </ion-item>
+    }
+  </ion-list>
+}

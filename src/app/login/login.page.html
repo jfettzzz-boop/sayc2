@@ -1,4 +1,9 @@
 <ion-content class="ion-padding">
+  <header class="login-brand">
+    <h1><a routerLink="/welcome">SAYC</a></h1>
+    <p>{{ 'welcome_subtitle' | translate }}</p>
+  </header>
+
   <ion-card class="login-card">
     <ion-card-header>
       <div class="login-preferences">
@@ -8,13 +13,7 @@
         </ion-button>
         <ion-popover trigger="login-language" [dismissOnSelect]="true">
           <ng-template>
-            <ion-list lines="none">
-              @for (language of languages; track language.code) {
-                <ion-item button [detail]="false" (click)="preferences.setLanguage(language.code)">
-                  <ion-label>{{ language.label }}</ion-label>
-                </ion-item>
-              }
-            </ion-list>
+            <app-preference-options kind="language"></app-preference-options>
           </ng-template>
         </ion-popover>
 
@@ -24,15 +23,14 @@
         </ion-button>
         <ion-popover trigger="login-theme" [dismissOnSelect]="true">
           <ng-template>
-            <ion-list lines="none">
-              @for (theme of themes; track theme.id) {
-                <ion-item button [detail]="false" (click)="preferences.setTheme(theme.id)">
-                  <ion-label>{{ theme.labelKey | translate }}</ion-label>
-                </ion-item>
-              }
-            </ion-list>
+            <app-preference-options kind="theme"></app-preference-options>
           </ng-template>
         </ion-popover>
+
+        <ion-button id="login-connection" fill="clear" size="small" (click)="isConnectionOpen.set(true)">
+          <ion-icon slot="start" name="server-outline"></ion-icon>
+          {{ 'connection.title' | translate }}
+        </ion-button>
       </div>
 
       <ion-card-title>{{ 'login' | translate }}</ion-card-title>
@@ -80,6 +78,35 @@
         <!-- ion-button is not a native submit button, so Enter needs this one to submit the form. -->
         <input type="submit" hidden />
       </form>
+
+      <p class="login-register">
+        {{ 'org_register.no_account' | translate }}
+        <a routerLink="/register">{{ 'landing.register_company' | translate }}</a>
+      </p>
+
+      <p class="connection-status">
+        {{ 'connection.title' | translate }}:
+        @if (connection.isLocal()) {
+          {{ 'connection.mode_local' | translate }}
+        } @else if (connection.serverUrl()) {
+          {{ connection.serverUrl() }}
+        } @else {
+          {{ 'connection.mode_server' | translate }}
+        }
+      </p>
     </ion-card-content>
   </ion-card>
+
+  <ion-modal class="connection-modal" [isOpen]="isConnectionOpen()" (didDismiss)="isConnectionOpen.set(false)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ 'connection.title' | translate }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <app-connection-settings (closed)="isConnectionOpen.set(false)"></app-connection-settings>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

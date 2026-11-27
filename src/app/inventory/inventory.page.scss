@@ -1,0 +1,174 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.filters ion-searchbar {
+  flex: 1 1 280px;
+}
+
+.filters ion-toggle {
+  flex: 0 0 auto;
+}
+
+.sort-select {
+  flex: 0 1 260px;
+}
+
+.products {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.products th {
+  padding: 8px;
+  text-align: start;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ion-color-medium-shade, #5f5f5f);
+  border-bottom: 2px solid var(--ion-border-color, rgba(128, 128, 128, 0.4));
+}
+
+.products td {
+  padding: 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--ion-border-color, rgba(128, 128, 128, 0.25));
+}
+
+.sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort-header:hover,
+th[aria-sort='ascending'] .sort-header,
+th[aria-sort='descending'] .sort-header {
+  color: var(--ion-color-primary);
+}
+
+.col-image {
+  width: 72px;
+}
+
+.product-image,
+.image-placeholder {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+
+.product-image {
+  object-fit: contain;
+  background: #fff;
+}
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--ion-color-medium, #92949c);
+  background: var(--ion-color-light, #f4f5f8);
+}
+
+.product-name {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.product-detail {
+  font-size: 0.8125rem;
+  color: var(--ion-color-medium-shade, #5f5f5f);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.compact-figures {
+  display: none;
+}
+
+.col-price,
+.col-stock {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.col-name ion-badge {
+  margin-top: 4px;
+}
+
+.actions ion-button {
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.action-error,
+.load-error {
+  margin: 0 0 16px;
+}
+
+// On a phone the table keeps picture, name and actions, and the select handles sorting.
+@media (max-width: 640px) {
+  .products thead,
+  .products .col-price,
+  .products .col-stock {
+    display: none;
+  }
+
+  .compact-figures {
+    display: block;
+  }
+
+  .sort-select {
+    flex: 1 1 100%;
+  }
+
+  .col-image {
+    width: 56px;
+  }
+
+  .product-image,
+  .image-placeholder {
+    width: 44px;
+    height: 44px;
+  }
+
+  .products td {
+    padding: 8px 4px;
+  }
+}

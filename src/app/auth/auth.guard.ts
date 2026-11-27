@@ -1,37 +1,36 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
-/** Sends visitors without a session to the login page. */
-export const authGuard: CanActivateFn = () =>
-  inject(AuthService).isAuthenticated() ? true : inject(Router).createUrlTree(['/login']);
+/**
+ * Requires a session and makes sure the user is loaded, so pages can rely on the role.
+ * If the API can't be reached the page still opens, to show its own connection error.
+ */
+export const authGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const loginPage = inject(Router).createUrlTree(['/login']);
+
+  if (!auth.isAuthenticated()) return loginPage;
+  if (auth.currentUser()) return true;
+
+  return auth.me().pipe(
+    map(() => true),
+    catchError((err: HttpErrorResponse) => of(err.status === 401 ? loginPage : true)),
+  );
+};
 
 /** Sends users who already have a session past the login page. */
 export const guestGuard: CanActivateFn = () =>
   inject(AuthService).isAuthenticated() ? inject(Router).createUrlTree(['/home']) : true;
 
-const ADMIN_ROLE = 'Administrador';
-
 /**
- * Restricts a route to administrators. The role comes from /auth/me, so the
- * profile is fetched when it is not in memory yet (fresh app load).
+ * Restricts a page to administrators; others go to their home page. Runs after authGuard, which
+ * has loaded the user, so the role is known. The API checks the role again on every request.
  */
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  const router = inject(Router);
-  const allow = () => true;
-  const deny = () => router.createUrlTree(['/home']);
-  const toLogin = () => router.createUrlTree(['/login']);
-
-  if (!auth.isAuthenticated()) return toLogin();
-
-  const user = auth.user();
-  if (user) return user.role_name === ADMIN_ROLE ? allow() : deny();
-
-  return auth.me().pipe(
-    map((loaded) => (loaded.role_name === ADMIN_ROLE ? allow() : deny())),
-    catchError(() => of(toLogin())),
-  );
+  return auth.isAdmin() ? true : inject(Router).createUrlTree([auth.currentUser() ? '/home' : '/login']);
 };

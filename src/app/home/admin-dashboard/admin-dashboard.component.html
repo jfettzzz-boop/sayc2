@@ -1,0 +1,145 @@
+<div class="dashboard-actions">
+  <ion-button class="refresh-dashboard" fill="clear" size="small" [disabled]="isLoading()" (click)="load()">
+    <ion-icon slot="start" name="refresh-outline"></ion-icon>
+    {{ 'admin_dashboard.refresh' | translate }}
+  </ion-button>
+</div>
+
+@if (loadFailed()) {
+  <div class="ion-text-center ion-padding">
+    <ion-text color="danger">
+      <p class="dashboard-error">{{ 'admin.load_error' | translate }}</p>
+    </ion-text>
+  </div>
+}
+
+@if (data(); as d) {
+  <div class="tiles">
+    <div class="tile" data-tile="sales-today">
+      <span class="tile-label">{{ 'admin_dashboard.sales_today' | translate }}</span>
+      <span class="tile-value">${{ d.sales.today.total | number:'1.2-2' }}</span>
+      <span class="tile-detail">{{ 'admin_dashboard.sales_count' | translate }}: {{ d.sales.today.count }}</span>
+    </div>
+    <div class="tile" data-tile="sales-30">
+      <span class="tile-label">{{ 'admin_dashboard.sales_30_days' | translate }}</span>
+      <span class="tile-value">${{ d.sales.last_30_days.total | number:'1.2-2' }}</span>
+      <span class="tile-detail">{{ 'admin_dashboard.sales_count' | translate }}: {{ d.sales.last_30_days.count }}</span>
+    </div>
+    <div class="tile" data-tile="users">
+      <span class="tile-label">{{ 'admin_dashboard.active_users' | translate }}</span>
+      <span class="tile-value">{{ d.users.active }}</span>
+      <span class="tile-detail">{{ 'admin_dashboard.of_total' | translate }} {{ d.users.total }}</span>
+    </div>
+    <div class="tile" data-tile="products">
+      <span class="tile-label">{{ 'admin_dashboard.products' | translate }}</span>
+      <span class="tile-value">{{ d.products.total }}</span>
+      <span class="tile-detail">
+        {{ 'admin_dashboard.inventory_cost' | translate }}: ${{ d.products.inventory_cost | number:'1.2-2' }}
+      </span>
+    </div>
+    <div class="tile" data-tile="low-stock">
+      <span class="tile-label">
+        @if (d.products.low_stock > 0) {
+          <ion-icon aria-hidden="true" color="warning" name="warning-outline"></ion-icon>
+        }
+        {{ 'admin_dashboard.low_stock' | translate }}
+      </span>
+      <span class="tile-value">{{ d.products.low_stock }}</span>
+      <span class="tile-detail">{{ d.products.out_of_stock }} {{ 'admin_dashboard.out_of_stock' | translate }}</span>
+    </div>
+  </div>
+
+  <div class="panels">
+    <ion-card class="panel" data-panel="low-stock">
+      <ion-card-header>
+        <ion-card-title>{{ 'admin_dashboard.low_stock_title' | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full">
+          @for (product of d.low_stock_products; track product.id) {
+            <ion-item>
+              <ion-label>
+                <h3>{{ product.product_name }}</h3>
+                <p>{{ 'admin_dashboard.minimum' | translate }}: {{ product.product_min_stock }}</p>
+              </ion-label>
+              @if (product.product_current_stock === 0) {
+                <ion-badge slot="end" color="danger">{{ 'admin_dashboard.none_left' | translate }}</ion-badge>
+              } @else {
+                <ion-note slot="end">{{ 'admin_dashboard.stock' | translate }}: {{ product.product_current_stock }}</ion-note>
+              }
+            </ion-item>
+          } @empty {
+            <p class="panel-empty">{{ 'admin.no_data' | translate }}</p>
+          }
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="panel" data-panel="recent-sales">
+      <ion-card-header>
+        <ion-card-title>{{ 'admin_dashboard.recent_sales' | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full">
+          @for (sale of d.recent_sales; track sale.id) {
+            <ion-item>
+              <ion-label>
+                <h3>{{ sale.user_name }}</h3>
+                <p>{{ sale.sales_date | date:'dd/MM/yyyy HH:mm' }}</p>
+              </ion-label>
+              <ion-note slot="end">${{ sale.sales_total | number:'1.2-2' }}</ion-note>
+            </ion-item>
+          } @empty {
+            <p class="panel-empty">{{ 'admin.no_data' | translate }}</p>
+          }
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="panel" data-panel="top-products">
+      <ion-card-header>
+        <ion-card-title>{{ 'admin_dashboard.top_products' | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full">
+          @for (product of d.top_products; track product.id) {
+            <ion-item>
+              <ion-label>
+                <h3>{{ product.product_name }}</h3>
+                <p>{{ 'admin_dashboard.sold' | translate }}: {{ product.quantity }}</p>
+              </ion-label>
+              <ion-note slot="end">${{ product.revenue | number:'1.2-2' }}</ion-note>
+            </ion-item>
+          } @empty {
+            <p class="panel-empty">{{ 'admin.no_data' | translate }}</p>
+          }
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="panel" data-panel="adjustments">
+      <ion-card-header>
+        <ion-card-title>{{ 'admin_dashboard.recent_adjustments' | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full">
+          @for (adjustment of d.recent_adjustments; track adjustment.id) {
+            <ion-item>
+              <ion-label>
+                <h3>{{ adjustment.product_name }}</h3>
+                <p>{{ adjustment.user_name }} · {{ adjustment.adj_date | date:'dd/MM/yyyy HH:mm' }}</p>
+              </ion-label>
+              <ion-note slot="end">{{ adjustment.adj_previous_amount }} → {{ adjustment.adj_new_amount }}</ion-note>
+            </ion-item>
+          } @empty {
+            <p class="panel-empty">{{ 'admin.no_data' | translate }}</p>
+          }
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  </div>
+} @else if (isLoading()) {
+  <div class="ion-text-center ion-padding">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+}

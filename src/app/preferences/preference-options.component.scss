@@ -1,0 +1,19 @@
+ion-list {
+  padding: 4px 0;
+}
+
+.option {
+  --min-height: 40px;
+}
+
+// Each theme's page background and main color, split diagonally.
+.swatch {
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-inline-end: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--swatch-background) 50%, var(--swatch-primary) 50%);
+}

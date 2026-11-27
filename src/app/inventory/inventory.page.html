@@ -1,0 +1,209 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'inventory.title' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button class="new-product" (click)="editor.set({ product: null })">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        {{ 'products_page.add' | translate }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="page">
+    <div class="filters">
+      <ion-searchbar
+        [value]="searchTerm()"
+        [debounce]="0"
+        [placeholder]="'charge.search' | translate"
+        (ionInput)="onSearchInput($event.detail.value)">
+      </ion-searchbar>
+      <ion-toggle
+        class="low-stock-filter"
+        labelPlacement="end"
+        justify="start"
+        [checked]="lowStockOnly()"
+        (ionChange)="onLowStockChange($event.detail.checked)">
+        {{ 'inventory.low_stock_only' | translate }}
+      </ion-toggle>
+      <ion-select
+        class="sort-select"
+        interface="popover"
+        fill="outline"
+        labelPlacement="floating"
+        [label]="'inventory.sort' | translate"
+        [value]="sort().labelKey"
+        (ionChange)="onSortSelected($event.detail.value)">
+        @for (option of sortOptions; track option.labelKey) {
+          <ion-select-option [value]="option.labelKey">{{ option.labelKey | translate }}</ion-select-option>
+        }
+      </ion-select>
+    </div>
+
+    @if (actionErrorKey(); as key) {
+      <ion-text color="danger" role="alert">
+        <p class="action-error">{{ key | translate }}</p>
+      </ion-text>
+    }
+
+    @if (isLoading()) {
+      <div class="ion-text-center ion-padding">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+    } @else if (loadFailed()) {
+      <div class="ion-text-center ion-padding">
+        <ion-text color="danger">
+          <p class="load-error">{{ 'admin.load_error' | translate }}</p>
+        </ion-text>
+        <ion-button fill="outline" (click)="load()">{{ 'errors.RETRY' | translate }}</ion-button>
+      </div>
+    } @else if (products().length === 0) {
+      <p class="no-products ion-text-center">{{ 'inventory.no_products' | translate }}</p>
+    } @else {
+      <table class="products">
+        <thead>
+          <tr>
+            <th class="col-image" scope="col"><span class="visually-hidden">{{ 'inventory.col_image' | translate }}</span></th>
+            <th class="col-name" scope="col" [attr.aria-sort]="ariaSort('name')">
+              <button type="button" class="sort-header sort-name" (click)="toggleSort('name')">
+                {{ 'inventory.col_product' | translate }}
+                <ion-icon aria-hidden="true" [name]="sortIcon('name')"></ion-icon>
+              </button>
+            </th>
+            <th class="col-price" scope="col">{{ 'inventory.col_price' | translate }}</th>
+            <th class="col-stock" scope="col" [attr.aria-sort]="ariaSort('stock')">
+              <button type="button" class="sort-header sort-stock" (click)="toggleSort('stock')">
+                {{ 'charge.stock' | translate }}
+                <ion-icon aria-hidden="true" [name]="sortIcon('stock')"></ion-icon>
+              </button>
+            </th>
+            <th class="col-actions" scope="col"><span class="visually-hidden">{{ 'admin.actions' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of products(); track product.id) {
+            <tr class="product-row">
+              <td class="col-image">
+                @if (showImage(product)) {
+                  <img
+                    class="product-image"
+                    loading="lazy"
+                    [src]="product.product_img_url"
+                    [alt]="product.product_name"
+                    (error)="onImageError(product.product_img_url)" />
+                } @else {
+                  <span class="image-placeholder">
+                    <ion-icon aria-hidden="true" name="image-outline"></ion-icon>
+                  </span>
+                }
+              </td>
+              <td class="col-name">
+                <div class="product-name">{{ product.product_name }}</div>
+                @if (product.product_brand || product.product_barcode) {
+                  <div class="product-detail">
+                    {{ product.product_brand }}
+                    @if (product.product_brand && product.product_barcode) { · }
+                    {{ product.product_barcode }}
+                  </div>
+                }
+                <!-- On a phone the price and stock columns collapse into this line. -->
+                <div class="compact-figures product-detail">
+                  ${{ product.product_sell_price | number:'1.2-2' }} ·
+                  {{ 'charge.stock' | translate }}: {{ product.product_current_stock }}
+                </div>
+                @if (product.product_current_stock === 0) {
+                  <ion-badge color="danger">{{ 'admin_dashboard.none_left' | translate }}</ion-badge>
+                } @else if (isLow(product)) {
+                  <ion-badge color="warning">{{ 'admin_dashboard.low_stock' | translate }}</ion-badge>
+                }
+              </td>
+              <td class="col-price price">${{ product.product_sell_price | number:'1.2-2' }}</td>
+              <td class="col-stock">
+                <div class="stock">{{ product.product_current_stock }}</div>
+                <div class="product-detail">{{ 'admin_dashboard.minimum' | translate }}: {{ product.product_min_stock }}</div>
+              </td>
+              <td class="col-actions">
+                <div class="actions">
+                  <ion-button
+                    class="adjust-stock"
+                    fill="clear"
+                    [title]="'inventory.adjust' | translate"
+                    [attr.aria-label]="'inventory.adjust' | translate"
+                    (click)="adjusting.set(product)">
+                    <ion-icon slot="icon-only" name="layers-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    class="edit-product"
+                    fill="clear"
+                    [title]="'inventory.edit' | translate"
+                    [attr.aria-label]="'inventory.edit' | translate"
+                    (click)="editor.set({ product })">
+                    <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    class="delete-product"
+                    fill="clear"
+                    color="danger"
+                    [title]="'inventory.delete' | translate"
+                    [attr.aria-label]="'inventory.delete' | translate"
+                    (click)="confirmDelete(product)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (hasMore()) {
+        <div class="ion-text-center ion-padding">
+          <ion-button class="load-more" fill="outline" [disabled]="isLoadingMore()" (click)="loadMore()">
+            {{ 'admin.load_more' | translate }}
+          </ion-button>
+        </div>
+      }
+    }
+  </div>
+
+  <ion-modal class="product-modal" [isOpen]="editor() !== null" (didDismiss)="closeEditor()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ (editor()?.product ? 'inventory.edit' : 'products_page.tab_add') | translate }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <app-product-form
+          [product]="editor()?.product ?? null"
+          [cancellable]="true"
+          (saved)="onProductSaved($event)"
+          (cancelled)="closeEditor()">
+        </app-product-form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal class="stock-modal" [isOpen]="adjusting() !== null" (didDismiss)="adjusting.set(null)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ adjusting()?.product_name }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        @if (adjusting(); as product) {
+          <app-stock-adjustment
+            [product]="product"
+            (adjusted)="onStockAdjusted($event)"
+            (cancelled)="adjusting.set(null)">
+          </app-stock-adjustment>
+        }
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

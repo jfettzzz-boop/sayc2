@@ -42,47 +42,49 @@
 
 /* Naranja */
 body.theme-sunset {
-  --ion-color-primary: #ff6b6b;
-  --ion-color-primary-rgb: 255, 107, 107;
+  --ion-color-primary: #c2410c;
+  --ion-color-primary-rgb: 194, 65, 12;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #e05e5e;
-  --ion-color-primary-tint: #ff7b7b;
+  --ion-color-primary-shade: #ab390b;
+  --ion-color-primary-tint: #c85424;
 
-  /* Fondo general y de elementos con un tinte cálido muy suave */
-  --ion-background-color: #fff9f9;
-  --ion-background-color-rgb: 255, 249, 249;
+  /* Fondo general y texto en neutros cálidos, para acompañar al naranja */
+  --ion-background-color: #fffaf5;
+  --ion-background-color-rgb: 255, 250, 245;
   --ion-item-background: #ffffff;
+  --ion-text-color: #1c1917;
+  --ion-text-color-rgb: 28, 25, 23;
 
-  --ion-color-step-50: #fdf2f2;
-  --ion-color-step-100: #fae6e6;
-  --ion-color-step-150: #f5d7d7;
-  --ion-color-step-200: #f0c8c8;
-  --ion-color-step-250: #ebb9b9;
-  --ion-color-step-300: #e6a9a9;
-  --ion-color-step-350: #e09a9a;
-  --ion-color-step-400: #db8b8b;
-  --ion-color-step-450: #d67c7c;
-  --ion-color-step-500: #d16d6d;
-  --ion-color-step-550: #cc5e5e;
-  --ion-color-step-600: #c74f4f;
-  --ion-color-step-650: #c24040;
-  --ion-color-step-700: #bd3131;
-  --ion-color-step-750: #b82222;
-  --ion-color-step-800: #b31313;
-  --ion-color-step-850: #ad0404;
-  --ion-color-step-900: #9e0404;
-  --ion-color-step-950: #8f0303;
+  --ion-color-step-50: #f4efea;
+  --ion-color-step-100: #e8e4df;
+  --ion-color-step-150: #ddd8d4;
+  --ion-color-step-200: #d2cdc9;
+  --ion-color-step-250: #c6c2be;
+  --ion-color-step-300: #bbb7b2;
+  --ion-color-step-350: #b0aba7;
+  --ion-color-step-400: #a4a09c;
+  --ion-color-step-450: #999591;
+  --ion-color-step-500: #8e8a86;
+  --ion-color-step-550: #827e7b;
+  --ion-color-step-600: #777370;
+  --ion-color-step-650: #6b6865;
+  --ion-color-step-700: #605d5a;
+  --ion-color-step-750: #55514f;
+  --ion-color-step-800: #494643;
+  --ion-color-step-850: #3e3b38;
+  --ion-color-step-900: #33302d;
+  --ion-color-step-950: #272422;
 }
 
 /* Verde */
 body.theme-emerald {
-  --ion-color-primary: #10b981;
-  --ion-color-primary-rgb: 16, 185, 129;
+  --ion-color-primary: #047857;
+  --ion-color-primary-rgb: 4, 120, 87;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #0e9f70;
-  --ion-color-primary-tint: #27c38f;
+  --ion-color-primary-shade: #046a4d;
+  --ion-color-primary-tint: #1d8668;
 
   /* Fondo general y de elementos con un tinte verdoso muy suave */
   --ion-background-color: #f4fbf7;

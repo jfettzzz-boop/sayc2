@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { pool } from './db.js';
+import { initDatabaseIfEmpty } from './init-db.js';
 
 try {
   await pool.query('SELECT 1');
@@ -9,6 +10,15 @@ try {
     `Could not connect to MySQL database "${config.db.database}" at ` +
       `${config.db.host}:${config.db.port}: ${err.code ?? err.message}`,
   );
+  process.exit(1);
+}
+
+try {
+  if (await initDatabaseIfEmpty(config.db, config.dbInit)) {
+    console.log(`Created the SAYC tables (DB_INIT=${config.dbInit}).`);
+  }
+} catch (err) {
+  console.error(`Could not create the SAYC tables: ${err.code ?? ''} ${err.message}`);
   process.exit(1);
 }
 

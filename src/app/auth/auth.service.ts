@@ -1,10 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
 const TOKEN_KEY = 'sayc_token';
 
 export const LOGIN_URL = '/api/v1/auth/login';
+export const REGISTER_URL = '/api/v1/auth/register';
+export const ROLE_ADMIN = 'Administrador';
 
 export interface AuthUser {
   id: string;
@@ -13,6 +15,24 @@ export interface AuthUser {
   user_state: string;
   role_id: string;
   role_name: string;
+  organization_id: string;
+  org_name: string;
+}
+
+/** A new company and its first administrator, as POST /auth/register takes them. */
+export interface Registration {
+  organization: {
+    org_name: string;
+    org_email: string;
+    org_tax_id?: string;
+    org_phone?: string;
+    org_address?: string;
+  };
+  user: {
+    user_name: string;
+    user_email: string;
+    password: string;
+  };
 }
 
 export interface LoginResponse {
@@ -35,27 +55,37 @@ export class AuthService {
   private readonly http = inject(HttpClient);
 
   readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
-  readonly user = signal<AuthUser | null>(null);
+
+  /** The signed-in user. authGuard loads it after a page reload, from the API rather than storage. */
+  readonly currentUser = signal<AuthUser | null>(null);
+
+  /** Decides what to show only. The API enforces permissions on every request. */
+  readonly isAdmin = computed(() => this.currentUser()?.role_name === ROLE_ADMIN);
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(LOGIN_URL, { email, password }).pipe(
-      tap(({ token, user }) => {
-        localStorage.setItem(TOKEN_KEY, token);
-        this.token.set(token);
-        this.user.set(user);
-      }),
+      tap((session) => this.startSession(session)),
     );
   }
 
+  /** Registers a company with its administrator, who is signed in straight away. */
+  register(registration: Registration): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(REGISTER_URL, registration).pipe(
+      tap((session) => this.startSession(session)),
+    );
+  }
+
+  private startSession({ token, user }: LoginResponse) {
+    localStorage.setItem(TOKEN_KEY, token);
+    this.token.set(token);
+    this.currentUser.set(user);
+  }
+
+  /** Fetches the signed-in user, so a changed role is picked up. */
   me(): Observable<AuthUser> {
     return this.http.get<AuthUser>('/api/v1/auth/me').pipe(
-      tap((user) => this.user.set(user)),
+      tap((user) => this.currentUser.set(user)),
     );
-  }
-
-  /** Restores the user profile when a token already exists (app reload). */
-  loadUser(): Observable<AuthUser> {
-    return this.me();
   }
 
   /** True while there is an unexpired token. An expired or unreadable one is discarded. */
@@ -68,6 +98,6 @@ export class AuthService {
   clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     this.token.set(null);
-    this.user.set(null);
+    this.currentUser.set(null);
   }
 }

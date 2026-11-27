@@ -3,13 +3,30 @@ ion-menu ion-content {
 }
 
 ion-menu {
+  // The custom properties size the panel inside the menu, on every screen size.
+  --width: 280px;
+  --min-width: 280px;
   width: 280px;
   min-width: 280px;
-  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  // min-width has to animate too, or it would force the full width at once when expanding.
+  transition:
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 
   &.collapsed {
+    --width: 70px;
+    --min-width: 70px;
     width: 70px !important;
     min-width: 70px !important;
+
+    ion-content {
+      --padding-start: 0 !important;
+      --padding-end: 0 !important;
+    }
 
     .menu-header-row {
       justify-content: center;
@@ -21,17 +38,12 @@ ion-menu {
     }
 
     ion-item {
-      --padding-start: 0 !important;
+      // Centers the 24px icon in the 70px menu.
+      --padding-start: 23px !important;
       --padding-end: 0 !important;
       --inner-padding-end: 0 !important;
       --inner-padding-start: 0 !important;
-      width: 70px !important;
-      min-width: 70px !important;
-      max-width: 70px !important;
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
-      margin: 4px auto !important;
+      margin: 4px 0 !important;
 
       ion-icon {
         margin: 0 !important;
@@ -54,21 +66,23 @@ ion-menu {
   min-height: 40px;
 }
 
-.collapse-item {
-  --min-height: 40px;
-  --min-width: 40px;
-  --padding-start: 0px;
-  --padding-end: 0px;
-  margin: 0;
+.collapse-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   width: 40px;
-  
-  ion-icon {
-    color: var(--ion-color-medium, #73849a) !important;
-    font-size: 24px;
-    margin: auto;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ion-text-color, #000);
+  font-size: 24px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(var(--ion-color-primary-rgb), 0.14);
   }
 }
 
@@ -176,10 +190,36 @@ ion-menu.ios ion-note {
 
 ion-note {
   display: inline-block;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--ion-color-medium-shade);
 }
 
 ion-item.selected {
   --color: var(--ion-color-primary);
+}
+
+// Compact footer: one tight list, with the options opening to the side.
+ion-menu .menu-footer ion-list {
+  padding: 0;
+}
+
+ion-menu .menu-footer ion-item {
+  --min-height: 36px;
+  font-size: 14px;
+}
+
+// Ionic's default margins would otherwise hold each row at 45px.
+ion-menu .menu-footer ion-label,
+ion-menu .menu-footer ion-icon {
+  margin-block: 6px;
+}
+
+.menu-footer {
+  margin-bottom: 8px;
+}
+
+.menu-flyout {
+  --width: 210px;
+  // Clears the menu's edge, which is past the padding around the item that opens it.
+  --offset-x: 12px;
 }

@@ -1,0 +1,87 @@
+# Render Blueprint for the SAYC API and its MySQL database. The app itself goes on Vercel (vercel.json).
+# Render has no managed MySQL, so the database runs from the official image as a private service:
+# it has no public address, and only services in this account reach it, at sayc-mysql:3306.
+# See DEPLOY.md for the steps, and the values marked sync: false to fill in on the dashboard.
+
+services:
+  - type: pserv
+    name: sayc-mysql
+    runtime: image
+    image:
+      url: docker.io/library/mysql:8.4
+    # The data goes in a folder inside the disk: the disk's own top folder is not empty
+    # (it can hold lost+found), and MySQL refuses to set up in a folder that has files.
+    # The smaller buffers fit the 512 MB of the starter plan.
+    dockerCommand: docker-entrypoint.sh mysqld --datadir=/var/lib/mysql/data --performance-schema=OFF --innodb-buffer-pool-size=128M
+    # A persistent disk keeps the data across deploys and restarts; it needs a paid plan.
+    plan: starter
+    region: oregon
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 1
+    envVars:
+      - key: MYSQL_DATABASE
+        value: sayc_db
+      - key: MYSQL_USER
+        value: sayc
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
+  - type: web
+    name: sayc-api
+    runtime: node
+    plan: free
+    # Same region as the database, so they talk over Render's private network.
+    region: oregon
+    buildCommand: cd server && npm ci --omit=dev
+    startCommand: cd server && npm start
+    healthCheckPath: /api/v1/health
+    # Deploy again only when the API or the schema changes, not for app-only changes.
+    buildFilter:
+      paths:
+        - server/**
+        - database/**
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Internal address of the private MySQL service, filled in by Render.
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: sayc-mysql
+          property: host
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        fromService:
+          type: pserv
+          name: sayc-mysql
+          envVarKey: MYSQL_DATABASE
+      - key: DB_USER
+        fromService:
+          type: pserv
+          name: sayc-mysql
+          envVarKey: MYSQL_USER
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: sayc-mysql
+          envVarKey: MYSQL_PASSWORD
+      # Creates the tables on the first start. "demo" also adds the sample companies; use "schema"
+      # for a real deployment, and register the first company from the app.
+      - key: DB_INIT
+        value: schema
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      # Render's proxy sits in front of the API.
+      - key: TRUST_PROXY
+        value: "1"
+      # The Vercel address of the app, for example
+      # https://sayc.vercel.app,https://sayc-*-your-team.vercel.app,https://localhost,capacitor://localhost
+      - key: CORS_ORIGINS
+        sync: false

@@ -12,11 +12,16 @@ const RULES: ReadonlyArray<readonly [string, (value: string) => boolean]> = [
   ['special', (v) => /[^A-Za-z0-9]/.test(v)],
 ];
 
+/** Names of the rules a password breaks; empty when it meets them all. */
+export function passwordRuleFailures(value: string): string[] {
+  return RULES.filter(([, passes]) => !passes(value)).map(([name]) => name);
+}
+
 export function passwordStrength(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value as string;
     if (!value) return null;
-    const failed = RULES.filter(([, passes]) => !passes(value)).map(([name]) => name);
+    const failed = passwordRuleFailures(value);
     return failed.length > 0 ? { passwordStrength: failed } : null;
   };
 }

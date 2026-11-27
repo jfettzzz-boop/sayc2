@@ -1,0 +1,22 @@
+<ion-list lines="none">
+  @if (kind() === 'language') {
+    @for (language of languages; track language.code) {
+      <ion-item class="option" button [detail]="false" (click)="preferences.setLanguage(language.code)">
+        <ion-label>{{ language.label }}</ion-label>
+      </ion-item>
+    }
+  } @else {
+    @for (theme of themes; track theme.id) {
+      <ion-item class="option" button [detail]="false" (click)="preferences.setTheme(theme.id)">
+        <span
+          class="swatch"
+          slot="start"
+          aria-hidden="true"
+          [style.--swatch-background]="theme.background"
+          [style.--swatch-primary]="theme.primary">
+        </span>
+        <ion-label>{{ theme.labelKey | translate }}</ion-label>
+      </ion-item>
+    }
+  }
+</ion-list>

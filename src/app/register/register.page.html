@@ -1,0 +1,88 @@
+<ion-content class="ion-padding">
+  <div class="register">
+    <ion-button class="back" fill="clear" size="small" routerLink="/welcome">
+      <ion-icon slot="start" name="arrow-back-outline"></ion-icon>
+      {{ 'org_register.back' | translate }}
+    </ion-button>
+
+    <ion-card class="register-card">
+      <ion-card-header>
+        <ion-card-title>{{ 'org_register.title' | translate }}</ion-card-title>
+        <ion-card-subtitle>{{ 'org_register.subtitle' | translate }}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <fieldset>
+            <legend>{{ 'org_register.company' | translate }}</legend>
+            <ion-input formControlName="org_name" autocomplete="organization" fill="outline" labelPlacement="floating"
+              [label]="'org_register.org_name' | translate" [errorText]="'org_register.required' | translate"
+              [maxlength]="150"></ion-input>
+            <ion-input formControlName="org_email" type="email" inputmode="email" autocomplete="email" fill="outline"
+              labelPlacement="floating" [label]="'org_register.org_email' | translate"
+              [errorText]="emailErrorKey('org_email') | translate" [maxlength]="150"></ion-input>
+            <div class="row">
+              <ion-input formControlName="org_tax_id" fill="outline" labelPlacement="floating"
+                [label]="'org_register.org_tax_id' | translate" [helperText]="'org_register.optional' | translate"
+                [maxlength]="30"></ion-input>
+              <ion-input formControlName="org_phone" type="tel" inputmode="tel" autocomplete="tel" fill="outline"
+                labelPlacement="floating" [label]="'org_register.org_phone' | translate"
+                [helperText]="'org_register.optional' | translate" [maxlength]="30"></ion-input>
+            </div>
+            <ion-input formControlName="org_address" autocomplete="street-address" fill="outline" labelPlacement="floating"
+              [label]="'org_register.org_address' | translate" [helperText]="'org_register.optional' | translate"
+              [maxlength]="255"></ion-input>
+          </fieldset>
+
+          <fieldset>
+            <legend>{{ 'org_register.admin' | translate }}</legend>
+            <p class="hint">{{ 'org_register.admin_hint' | translate }}</p>
+            <ion-input formControlName="user_name" autocomplete="name" fill="outline" labelPlacement="floating"
+              [label]="'org_register.user_name' | translate" [errorText]="'org_register.required' | translate"
+              [maxlength]="100"></ion-input>
+            <ion-input formControlName="user_email" type="email" inputmode="email" autocomplete="username" fill="outline"
+              labelPlacement="floating" [label]="'email' | translate"
+              [errorText]="emailErrorKey('user_email') | translate" [maxlength]="150"></ion-input>
+            <div formGroupName="passwords">
+              <ion-input formControlName="password" type="password" autocomplete="new-password" fill="outline"
+                labelPlacement="floating" [label]="'password' | translate"
+                [helperText]="'org_register.password_hint' | translate: { min: minPassword }"
+                [errorText]="passwordErrorKey | translate: { min: minPassword }" [maxlength]="72">
+                <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+              </ion-input>
+              <ion-input formControlName="confirm" type="password" autocomplete="new-password" fill="outline"
+                labelPlacement="floating" [label]="'org_register.confirm' | translate"
+                [errorText]="'org_register.required' | translate" [maxlength]="72">
+                <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+              </ion-input>
+            </div>
+            @if (showMismatch) {
+              <ion-text color="danger"><p class="field-error">{{ 'org_register.mismatch' | translate }}</p></ion-text>
+            }
+          </fieldset>
+
+          @if (errorKey(); as key) {
+            <ion-text color="danger" role="alert">
+              <p class="register-error">{{ key | translate }}</p>
+            </ion-text>
+          }
+
+          <ion-button type="submit" expand="block" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              {{ 'org_register.submit' | translate }}
+            }
+          </ion-button>
+          <!-- ion-button is not a native submit button, so Enter needs this one to submit the form. -->
+          <input type="submit" hidden />
+        </form>
+
+        <p class="signin">
+          {{ 'org_register.have_account' | translate }}
+          <a routerLink="/login">{{ 'landing.sign_in' | translate }}</a>
+        </p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

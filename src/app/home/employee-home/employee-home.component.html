@@ -1,0 +1,13 @@
+<h1 class="greeting">{{ 'employee_home.greeting' | translate }}, {{ userName() }}</h1>
+
+<div class="cards">
+  @for (card of cards; track card.url) {
+    <ion-card class="action-card" button [routerLink]="card.url" routerDirection="root">
+      <ion-card-header>
+        <ion-icon aria-hidden="true" color="primary" [name]="card.icon"></ion-icon>
+        <ion-card-title>{{ card.title | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>{{ card.text | translate }}</ion-card-content>
+    </ion-card>
+  }
+</div>

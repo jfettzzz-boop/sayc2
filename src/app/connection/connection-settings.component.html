@@ -1,0 +1,57 @@
+<ion-segment class="mode" [value]="mode()" (ionChange)="onModeChange($event.detail.value)">
+  <ion-segment-button class="mode-local" value="local">
+    <ion-label>{{ 'connection.mode_local' | translate }}</ion-label>
+  </ion-segment-button>
+  <ion-segment-button class="mode-server" value="server">
+    <ion-label>{{ 'connection.mode_server' | translate }}</ion-label>
+  </ion-segment-button>
+</ion-segment>
+
+@if (mode() === 'local') {
+  <p class="help">{{ 'connection.local_help' | translate }}</p>
+  <p class="help test-accounts">{{ 'connection.local_accounts' | translate }}</p>
+} @else {
+  <p class="help">{{ 'connection.server_help' | translate }}</p>
+
+  <ion-input
+    class="server-url"
+    type="url"
+    inputmode="url"
+    autocomplete="off"
+    fill="outline"
+    labelPlacement="floating"
+    placeholder="https://mi-servidor.com"
+    [label]="'connection.server_url' | translate"
+    [value]="url()"
+    (ionInput)="onUrlInput($event.detail.value)">
+  </ion-input>
+
+  @if (urlInvalid()) {
+    <ion-text color="danger"><p class="message url-error">{{ 'connection.invalid_url' | translate }}</p></ion-text>
+  }
+
+  <ion-button class="test-connection" fill="outline" size="small" [disabled]="isTesting()" (click)="test()">
+    @if (isTesting()) {
+      <ion-spinner name="crescent"></ion-spinner>
+    } @else {
+      {{ 'connection.test' | translate }}
+    }
+  </ion-button>
+
+  @if (testResult() === 'ok') {
+    <p class="message test-ok" role="status">
+      <ion-icon aria-hidden="true" color="success" name="checkmark-circle-outline"></ion-icon>
+      {{ 'connection.test_ok' | translate }}
+    </p>
+  } @else if (testResult() === 'failed') {
+    <p class="message test-failed" role="alert">
+      <ion-icon aria-hidden="true" color="danger" name="close-circle-outline"></ion-icon>
+      {{ 'connection.test_failed' | translate }}
+    </p>
+  }
+}
+
+<div class="actions">
+  <ion-button class="cancel-connection" fill="clear" (click)="closed.emit()">{{ 'common.cancel' | translate }}</ion-button>
+  <ion-button class="save-connection" (click)="save()">{{ 'admin.save' | translate }}</ion-button>
+</div>

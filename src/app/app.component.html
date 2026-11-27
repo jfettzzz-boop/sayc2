@@ -1,25 +1,34 @@
 <ion-app>
-  <ion-split-pane contentId="main-content" [disabled]="isMenuHidden()">
-    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isCollapsed" [disabled]="isMenuHidden()">
+  <ion-split-pane
+    contentId="main-content"
+    [disabled]="isMenuHidden()"
+    (ionSplitPaneVisible)="isPaneVisible.set($event.detail.visible)">
+    <ion-menu contentId="main-content" type="overlay" [class.collapsed]="isNarrow" [disabled]="isMenuHidden()">
       <ion-content>
         <div class="menu-container">
 
           <div class="menu-top">
             <ion-list id="inbox-list">
               <div class="menu-header-row">
-                @if (!isCollapsed) {
+                @if (!isNarrow) {
                   <ion-list-header>SAYC</ion-list-header>
                 }
-                <ion-item lines="none" button (click)="toggleCollapse()" class="collapse-item" [title]="'Toggle Menu'">
-                  <ion-icon aria-hidden="true" slot="start" name="menu-outline"></ion-icon>
-                </ion-item>
+                <button
+                  type="button"
+                  class="collapse-button"
+                  [title]="'toggle_menu' | translate"
+                  [attr.aria-label]="'toggle_menu' | translate"
+                  [attr.aria-expanded]="!isNarrow"
+                  (click)="toggleCollapse()">
+                  <ion-icon aria-hidden="true" name="menu-outline"></ion-icon>
+                </button>
               </div>
 
-              @if (!isCollapsed) {
-                <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
+              @if (!isNarrow) {
+                <ion-note>{{ orgName() ?? ('welcome_subtitle' | translate) }}</ion-note>
               }
               
-              @for (p of visiblePages(); track p; let i = $index) {
+              @for (p of appPages(); track p.url) {
                 <ion-menu-toggle auto-hide="false">
                   <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false"
                     routerLinkActive="selected" [title]="p.title | translate">
@@ -33,54 +42,29 @@
           </div>
 
           <div class="menu-footer">
-            <!-- Language selector -->
-            <ion-list id="labels-list">
-              <ion-item lines="none" button (click)="toggleLanguageMenu()" [title]="'lang' | translate">
+            <ion-list>
+              <ion-item id="menu-language" lines="none" button [detail]="false" [title]="'lang' | translate">
                 <ion-icon aria-hidden="true" slot="start" name="language-outline"></ion-icon>
                 <ion-label>{{ 'lang' | translate }}</ion-label>
-                @if (!isCollapsed) {
-                  <ion-icon aria-hidden="true" slot="end"
-                    [name]="showLanguageMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-                }
               </ion-item>
+              <ion-popover class="menu-flyout" trigger="menu-language" side="right" alignment="end" [dismissOnSelect]="true">
+                <ng-template>
+                  <app-preference-options kind="language"></app-preference-options>
+                </ng-template>
+              </ion-popover>
 
-              @if (showLanguageMenu && !isCollapsed) {
-                @for (language of languages; track language.code) {
-                  <ion-menu-toggle auto-hide="false">
-                    <ion-item lines="none" button (click)="changeLanguage(language.code)" class="sub-lang-item">
-                      <ion-label>{{ language.label }}</ion-label>
-                    </ion-item>
-                  </ion-menu-toggle>
-                }
-              }
-            </ion-list>
-
-            <!-- Theme selector -->
-            <ion-list id="labels-list">
-              <ion-item lines="none" button (click)="toggleThemeMenu()" [title]="'theme' | translate">
+              <ion-item id="menu-theme" lines="none" button [detail]="false" [title]="'theme' | translate">
                 <ion-icon aria-hidden="true" slot="start" name="color-palette-outline"></ion-icon>
                 <ion-label>{{ 'theme' | translate }}</ion-label>
-                @if (!isCollapsed) {
-                  <ion-icon aria-hidden="true" slot="end"
-                    [name]="showThemeMenu ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-                }
               </ion-item>
+              <ion-popover class="menu-flyout" trigger="menu-theme" side="right" alignment="end" [dismissOnSelect]="true">
+                <ng-template>
+                  <app-preference-options kind="theme"></app-preference-options>
+                </ng-template>
+              </ion-popover>
 
-              @if (showThemeMenu && !isCollapsed) {
-                @for (theme of themes; track theme.id) {
-                  <ion-menu-toggle auto-hide="false">
-                    <ion-item lines="none" button (click)="setTheme(theme.id)" class="sub-lang-item">
-                      <ion-label>{{ theme.labelKey | translate }}</ion-label>
-                    </ion-item>
-                  </ion-menu-toggle>
-                }
-              }
-            </ion-list>
-
-            <!-- Logout -->
-            <ion-list>
               <ion-menu-toggle auto-hide="false">
-                <ion-item class="logout-item" lines="none" button (click)="logout()" [title]="'close_session' | translate">
+                <ion-item class="logout-item" lines="none" button [detail]="false" (click)="confirmLogout()" [title]="'close_session' | translate">
                   <ion-icon aria-hidden="true" slot="start" name="log-out-outline"></ion-icon>
                   <ion-label>{{ 'close_session' | translate }}</ion-label>
                 </ion-item>

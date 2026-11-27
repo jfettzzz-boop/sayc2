@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.current-stock {
+  margin: 0 0 16px;
+}
+
+ion-select,
+ion-input,
+ion-textarea {
+  margin-bottom: 16px;
+}
+
+.mode {
+  margin-bottom: 16px;
+}
+
+.increments {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.increment {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.resulting {
+  margin: 0 0 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.resulting-negative {
+  color: var(--ion-color-danger);
+}
+
+.adjust-error {
+  margin: 0 0 12px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.history-title {
+  margin: 24px 0 8px;
+  font-size: 1rem;
+}
+
+ion-note {
+  font-variant-numeric: tabular-nums;
+}
