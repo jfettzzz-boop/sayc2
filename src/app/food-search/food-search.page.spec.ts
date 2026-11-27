@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
 import { provideTranslateService } from '@ngx-translate/core';
 
-import { FoodSearchPage, SEARCH_INTERVAL_MS, SEARCH_URL, draftFromOpenFoodFacts, legacySearchUrl, normalizeProduct, retryAfterMs } from './food-search.page';
+import { FoodSearchPage, SEARCH_INTERVAL_MS, SEARCH_URL, draftFromOpenFoodFacts, legacySearchUrl, normalizeProduct, retryAfterMs, retryCooldownMs } from './food-search.page';
 
 const isSearch = (r: any) => r.url.startsWith(SEARCH_URL);
 const isLegacy = (r: any) => r.url.startsWith('/api/cgi/search.pl');
@@ -60,6 +60,12 @@ describe('normalizeProduct', () => {
   it('calls search.pl directly from the installed app and through the proxy in a browser', () => {
     expect(legacySearchUrl(true)).toBe('https://world.openfoodfacts.org/cgi/search.pl');
     expect(legacySearchUrl(false)).toBe('/api/cgi/search.pl');
+  });
+});
+
+describe('retryCooldownMs', () => {
+  it('doubles with each failure in a row, up to a minute', () => {
+    expect([1, 2, 3, 4, 5, 20].map(retryCooldownMs)).toEqual([6000, 12000, 24000, 48000, 60000, 60000]);
   });
 });
 
@@ -233,6 +239,38 @@ describe('FoodSearchPage', () => {
       http.expectOne((r) => search(r) && r.url.includes('nutella')).flush({ hits: [OFF_PRODUCT] });
       expect(page.hasError).toBe(false);
       expect(page.products.length).toBe(1);
+    });
+
+    it('starts the cooldown when a slow search fails, not when it was sent', () => {
+      page.onSearchChange({ detail: { value: 'nutella' } });
+      vi.advanceTimersByTime(800);
+      http.expectOne(search).flush(null, { status: 503, statusText: 'x' });
+      vi.advanceTimersByTime(SEARCH_INTERVAL_MS + 3000);
+      http.expectOne(isLegacy).flush(null, { status: 503, statusText: 'x' });
+
+      expect(page.hasError).toBe(true);
+      expect(page.waitSeconds()).toBe(SEARCH_INTERVAL_MS / 1000);
+      page.retry();
+      http.expectNone(search);
+    });
+
+    it('waits longer after each failure in a row, and starts over after a success', () => {
+      const failOnce = () => {
+        vi.advanceTimersByTime(60000);
+        page.retry();
+        failBoth(http);
+        return page.waitSeconds();
+      };
+      page.onSearchChange({ detail: { value: 'nutella' } });
+      vi.advanceTimersByTime(800);
+      failBoth(http);
+      expect(page.waitSeconds()).toBe(6);
+      expect([failOnce(), failOnce()]).toEqual([12, 24]);
+
+      vi.advanceTimersByTime(60000);
+      page.retry();
+      http.expectOne(search).flush({ hits: [OFF_PRODUCT] });
+      expect(failOnce()).toBe(6);
     });
 
     it('waits as long as the server asks when it is busy', () => {

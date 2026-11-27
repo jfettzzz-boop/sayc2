@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Capacitor } from '@capacitor/core';
@@ -21,6 +21,14 @@ type Mode = 'search' | 'add';
 export const SEARCH_INTERVAL_MS = 6000;
 /** Longest wait honoured from a Retry-After header, so a bad value can't lock the search. */
 const MAX_RETRY_AFTER_MS = 60000;
+
+/**
+ * Wait before the retry button works again, counted from when the search failed: the search
+ * interval, doubled for each failure in a row (6 s, 12 s, 24 s...), up to a minute.
+ */
+export function retryCooldownMs(failures: number): number {
+  return Math.min(SEARCH_INTERVAL_MS * 2 ** Math.max(failures - 1, 0), MAX_RETRY_AFTER_MS);
+}
 
 /** How long the server asked us to wait, from a Retry-After header in seconds or as a date. */
 export function retryAfterMs(err: unknown, now = Date.now()): number {
@@ -124,9 +132,14 @@ export class FoodSearchPage implements OnInit, OnDestroy {
   private searchSubscription!: Subscription;
   /** When the next search may be sent, as a Date.now() time. */
   private nextAllowedAt = 0;
+  /** Searches that failed in a row; each one lengthens the retry cooldown. */
+  private failures = 0;
   private ticker?: ReturnType<typeof setInterval>;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
+  private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  constructor() {
     addIcons({ 'add-outline': addOutline, 'checkmark-circle-outline': checkmarkCircleOutline, 'refresh-outline': refreshOutline });
   }
 
@@ -156,10 +169,17 @@ export class FoodSearchPage implements OnInit, OnDestroy {
           this.startTicker();
           return this.searchOpenFoodFacts(trimmedQuery);
         }).pipe(
+          map((response) => {
+            this.failures = 0;
+            return response;
+          }),
           catchError((err) => {
             console.error('Open Food Facts search failed', err);
-            // A busy server (429/503) may say how long to back off; wait at least that long.
-            this.nextAllowedAt = Math.max(this.nextAllowedAt, Date.now() + retryAfterMs(err));
+            // Counted from now: a slow failure must not use up the wait before the error shows.
+            // A busy server (429/503) may also say how long to back off; wait at least that long.
+            this.failures++;
+            const cooldown = Math.max(retryCooldownMs(this.failures), retryAfterMs(err));
+            this.nextAllowedAt = Math.max(this.nextAllowedAt, Date.now() + cooldown);
             this.startTicker();
             this.hasError = true;
             return of({ products: [], failed: true });
