@@ -2,12 +2,14 @@ import { Routes } from '@angular/router';
 
 import { authGuard, guestGuard } from './auth/auth.guard';
 
-// Every page requires a session except login. New pages should use authGuard too;
-// app.routes.spec.ts fails if one doesn't.
+// Every page requires a session except the public ones in PUBLIC_PAGES. New pages should use
+// authGuard too; app.routes.spec.ts fails if one doesn't.
+export const PUBLIC_PAGES = ['welcome', 'register', 'login'];
+
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'welcome',
     pathMatch: 'full',
   },
   {
@@ -40,6 +42,16 @@ export const routes: Routes = [
     path: 'food-search',
     canActivate: [authGuard],
     loadComponent: () => import('./food-search/food-search.page').then( m => m.FoodSearchPage)
+  },
+  {
+    path: 'welcome',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./landing/landing.page').then((m) => m.LandingPage),
+  },
+  {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./register/register.page').then((m) => m.RegisterPage),
   },
   {
     path: 'login',

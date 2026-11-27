@@ -1,0 +1,86 @@
+<ion-content>
+  <div class="landing">
+    <header class="topbar">
+      <a class="brand" routerLink="/welcome">SAYC</a>
+      <nav class="topbar-actions">
+        <ion-button id="landing-language" fill="clear" size="small" [title]="'lang' | translate">
+          <ion-icon slot="icon-only" name="language-outline"></ion-icon>
+        </ion-button>
+        <ion-popover trigger="landing-language" [dismissOnSelect]="true">
+          <ng-template>
+            <app-preference-options kind="language"></app-preference-options>
+          </ng-template>
+        </ion-popover>
+
+        <ion-button id="landing-theme" fill="clear" size="small" [title]="'theme' | translate">
+          <ion-icon slot="icon-only" name="color-palette-outline"></ion-icon>
+        </ion-button>
+        <ion-popover trigger="landing-theme" [dismissOnSelect]="true">
+          <ng-template>
+            <app-preference-options kind="theme"></app-preference-options>
+          </ng-template>
+        </ion-popover>
+
+        <ion-button class="signin" fill="outline" size="small" routerLink="/login">
+          {{ 'landing.sign_in' | translate }}
+        </ion-button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">{{ 'landing.eyebrow' | translate }}</p>
+        <h1>{{ 'landing.headline' | translate }}</h1>
+        <p class="lead">{{ 'landing.lead' | translate }}</p>
+        <div class="hero-actions">
+          <ion-button class="cta-register" size="large" routerLink="/register">
+            <ion-icon slot="start" name="business-outline"></ion-icon>
+            {{ 'landing.register_company' | translate }}
+          </ion-button>
+          <ion-button class="cta-signin" size="large" fill="outline" routerLink="/login">
+            {{ 'landing.have_account' | translate }}
+          </ion-button>
+        </div>
+      </section>
+
+      <section class="features" aria-labelledby="features-title">
+        <h2 id="features-title">{{ 'landing.features_title' | translate }}</h2>
+        <ul class="feature-grid">
+          @for (feature of features; track feature.key) {
+            <li class="feature">
+              <span class="feature-icon" aria-hidden="true"><ion-icon [name]="feature.icon"></ion-icon></span>
+              <h3>{{ 'landing.features.' + feature.key + '.title' | translate }}</h3>
+              <p>{{ 'landing.features.' + feature.key + '.text' | translate }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="steps" aria-labelledby="steps-title">
+        <h2 id="steps-title">{{ 'landing.steps_title' | translate }}</h2>
+        <ol class="step-list">
+          @for (step of steps; track step; let i = $index) {
+            <li class="step">
+              <span class="step-number" aria-hidden="true">{{ i + 1 }}</span>
+              <div>
+                <h3>{{ 'landing.steps.' + step + '.title' | translate }}</h3>
+                <p>{{ 'landing.steps.' + step + '.text' | translate }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <section class="closing">
+        <h2>{{ 'landing.closing_title' | translate }}</h2>
+        <p>{{ 'landing.closing_text' | translate }}</p>
+        <ion-button size="large" routerLink="/register">{{ 'landing.register_company' | translate }}</ion-button>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>© {{ year }} SAYC</span>
+      <span>{{ 'welcome_subtitle' | translate }}</span>
+    </footer>
+  </div>
+</ion-content>

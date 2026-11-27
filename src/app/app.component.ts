@@ -27,6 +27,7 @@ import {
 // Multilanguage
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 
+import { PUBLIC_PAGES } from './app.routes';
 import { AuthService } from './auth/auth.service';
 import { PreferenceOptionsComponent } from './preferences/preference-options.component';
 
@@ -52,11 +53,14 @@ export class AppComponent implements OnInit {
     { title: 'products_page.title', url: '/food-search', icon: 'search' },
   ]);
 
-  /** Hidden until the first navigation ends, so the menu never flashes on the login page. */
+  /** The company the signed-in user works for, shown under the menu title. */
+  protected readonly orgName = computed(() => this.auth.currentUser()?.org_name ?? null);
+
+  /** Hidden until the first navigation ends, so the menu never flashes on a public page. */
   protected readonly isMenuHidden = toSignal(
     inject(Router).events.pipe(
       filter((event) => event instanceof NavigationEnd),
-      map((event) => event.urlAfterRedirects.split(/[?#]/)[0] === '/login'),
+      map((event) => PUBLIC_PAGES.includes(event.urlAfterRedirects.split(/[?#]/)[0].slice(1))),
     ),
     { initialValue: true },
   );

@@ -111,3 +111,43 @@ TEST_DB_PORT=33999 npm test
 ```
 
 También se pueden definir `TEST_DB_HOST`, `TEST_DB_USER` y `TEST_DB_PASSWORD`.
+
+---
+
+## Despliegue
+
+La app se publica en **Vercel** y la API y MySQL en **Render**. Los pasos, las variables y las direcciones están en [DEPLOY.md](DEPLOY.md).
+
+---
+
+## App móvil (Android)
+
+La app guarda sus datos de una de dos formas, que se eligen con el botón **Conexión** en la pantalla de inicio de sesión:
+
+- **En este dispositivo**: una base de datos SQLite dentro de la app, con los mismos datos de prueba que `schema.sql`. Funciona sin internet ni servidor, y es la opción predeterminada de la app instalada.
+- **Servidor**: la API de `server/` en cualquier dirección, por ejemplo tu computadora o un hosting. La dirección se cambia sin volver a compilar.
+
+Son dos conjuntos de datos separados: no se sincronizan entre sí. Las reglas de `src/app/connection/local-api.service.ts` replican las de `server/src/routes`, así que un cambio en una debe hacerse también en la otra.
+
+### Generar el APK
+
+Requiere Android Studio y **JDK 21**: en Android Studio, *Settings > Build Tools > Gradle > Gradle JDK*. El Java 25 que incluye Android Studio no funciona con esta versión de Gradle.
+
+```bash
+npm run build
+npx cap sync android
+cd android
+./gradlew assembleDebug
+```
+
+El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+### Conectar la app a un servidor
+
+1. En `server/.env`, permite el origen de la app: `CORS_ORIGINS=https://localhost,capacitor://localhost`, y reinicia la API.
+2. En **Conexión**, elige **Servidor**, escribe la dirección y usa **Probar conexión**:
+   - Emulador de Android, hacia tu computadora: `http://10.0.2.2:3000`
+   - Teléfono real en la misma red: `http://IP-DE-TU-COMPUTADORA:3000`
+   - Hosting: `https://tu-servidor.com`
+
+`capacitor.config.ts` permite `http` para estas pruebas. Quita `cleartext` y `allowMixedContent` cuando la API esté en `https`.

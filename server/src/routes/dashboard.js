@@ -9,6 +9,7 @@ export const dashboardRouter = Router();
 dashboardRouter.use(requireAuth, requireAdmin);
 
 dashboardRouter.get('/', async (req, res) => {
+  const org = req.user.organization_id;
   const [
     [[users]],
     [[products]],
@@ -20,38 +21,44 @@ dashboardRouter.get('/', async (req, res) => {
     [recentAdjustments],
   ] = await Promise.all([
     pool.query(
-      `SELECT COUNT(*) AS total, COALESCE(SUM(user_state = 'activo'), 0) AS active FROM users`,
+      `SELECT COUNT(*) AS total, COALESCE(SUM(user_state = 'activo'), 0) AS active
+         FROM users WHERE organization_id = ?`,
+      [org],
     ),
     pool.query(
       `SELECT COUNT(*) AS total,
               COALESCE(SUM(product_current_stock <= product_min_stock), 0) AS low_stock,
               COALESCE(SUM(product_current_stock = 0), 0) AS out_of_stock,
               COALESCE(SUM(product_current_stock * product_costs), 0) AS inventory_cost
-         FROM products`,
+         FROM products WHERE organization_id = ?`,
+      [org],
     ),
     pool.query(
       `SELECT COUNT(*) AS count, COALESCE(SUM(sales_total), 0) AS total
-         FROM sales WHERE sales_date >= CURDATE()`,
+         FROM sales WHERE organization_id = ? AND sales_date >= CURDATE()`,
+      [org],
     ),
     pool.query(
       `SELECT COUNT(*) AS count, COALESCE(SUM(sales_total), 0) AS total
-         FROM sales WHERE sales_date >= CURDATE() - INTERVAL 29 DAY`,
+         FROM sales WHERE organization_id = ? AND sales_date >= CURDATE() - INTERVAL 29 DAY`,
+      [org],
     ),
     // Same definition of low stock as GET /products?low_stock=true.
     pool.query(
       `SELECT id, product_name, product_brand, product_current_stock, product_min_stock
          FROM products
-        WHERE product_current_stock <= product_min_stock
+        WHERE organization_id = ? AND product_current_stock <= product_min_stock
         ORDER BY product_current_stock - product_min_stock, product_name
         LIMIT ?`,
-      [LOW_STOCK_LIST_SIZE],
+      [org, LOW_STOCK_LIST_SIZE],
     ),
     pool.query(
       `SELECT s.id, s.sales_total, s.sales_date, u.user_name
          FROM sales s JOIN users u ON u.id = s.user_id
+        WHERE s.organization_id = ?
         ORDER BY s.sales_date DESC, s.id
         LIMIT ?`,
-      [LIST_SIZE],
+      [org, LIST_SIZE],
     ),
     pool.query(
       `SELECT p.id, p.product_name,
@@ -60,11 +67,11 @@ dashboardRouter.get('/', async (req, res) => {
          FROM sales_detail d
          JOIN sales s ON s.id = d.sales_id
          JOIN products p ON p.id = d.product_id
-        WHERE s.sales_date >= CURDATE() - INTERVAL 29 DAY
+        WHERE s.organization_id = ? AND s.sales_date >= CURDATE() - INTERVAL 29 DAY
         GROUP BY p.id, p.product_name
         ORDER BY quantity DESC, p.product_name
         LIMIT ?`,
-      [LIST_SIZE],
+      [org, LIST_SIZE],
     ),
     pool.query(
       `SELECT a.id, a.adj_type, a.adj_previous_amount, a.adj_new_amount, a.adj_date,
@@ -72,9 +79,10 @@ dashboardRouter.get('/', async (req, res) => {
          FROM inventory_adjustments a
          JOIN products p ON p.id = a.product_id
          JOIN users u ON u.id = a.user_id
+        WHERE a.organization_id = ?
         ORDER BY a.adj_date DESC, a.id
         LIMIT ?`,
-      [LIST_SIZE],
+      [org, LIST_SIZE],
     ),
   ]);
 

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
+import { auditBy } from '../audit.js';
 import { pool, withTransaction } from '../db.js';
 import { HttpError, notFound } from '../errors.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -45,9 +46,11 @@ inventoryRouter.get('/adjustments', async (req, res) => {
   const { product_id, limit, offset } = listSchema.parse(req.query);
   const [rows] = await pool.query(
     `${ADJUSTMENT}
-     ${product_id ? 'WHERE a.product_id = ?' : ''}
+     WHERE a.organization_id = ? ${product_id ? 'AND a.product_id = ?' : ''}
      ORDER BY a.adj_date DESC, a.id LIMIT ? OFFSET ?`,
-    product_id ? [product_id, limit, offset] : [limit, offset],
+    product_id
+      ? [req.user.organization_id, product_id, limit, offset]
+      : [req.user.organization_id, limit, offset],
   );
   res.json(rows);
 });
@@ -60,8 +63,8 @@ inventoryRouter.post('/adjustments', async (req, res) => {
 
   await withTransaction(async (connection) => {
     const [products] = await connection.query(
-      'SELECT product_current_stock FROM products WHERE id = ? FOR UPDATE',
-      [product_id],
+      'SELECT product_current_stock FROM products WHERE id = ? AND organization_id = ? FOR UPDATE',
+      [product_id, req.user.organization_id],
     );
     if (products.length === 0) throw notFound('Product');
 
@@ -78,10 +81,11 @@ inventoryRouter.post('/adjustments', async (req, res) => {
 
     await connection.query(
       `INSERT INTO inventory_adjustments
-         (id, product_id, user_id, adj_type, adj_previous_amount, adj_new_amount, adj_motive)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (id, organization_id, product_id, user_id, adj_type, adj_previous_amount, adj_new_amount, adj_motive)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         adjustmentId,
+        req.user.organization_id,
         product_id,
         req.user.id,
         adj_type,
@@ -94,6 +98,13 @@ inventoryRouter.post('/adjustments', async (req, res) => {
       newAmount,
       product_id,
     ]);
+    await auditBy(connection, req.user, {
+      table: 'products',
+      recordId: product_id,
+      action: 'UPDATE',
+      before: { product_current_stock: previous },
+      after: { product_current_stock: newAmount, adjustment_id: adjustmentId, adj_type },
+    });
   });
 
   const [rows] = await pool.query(`${ADJUSTMENT} WHERE a.id = ?`, [adjustmentId]);

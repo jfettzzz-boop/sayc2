@@ -5,6 +5,7 @@ import { Observable, tap } from 'rxjs';
 const TOKEN_KEY = 'sayc_token';
 
 export const LOGIN_URL = '/api/v1/auth/login';
+export const REGISTER_URL = '/api/v1/auth/register';
 export const ROLE_ADMIN = 'Administrador';
 
 export interface AuthUser {
@@ -14,6 +15,24 @@ export interface AuthUser {
   user_state: string;
   role_id: string;
   role_name: string;
+  organization_id: string;
+  org_name: string;
+}
+
+/** A new company and its first administrator, as POST /auth/register takes them. */
+export interface Registration {
+  organization: {
+    org_name: string;
+    org_email: string;
+    org_tax_id?: string;
+    org_phone?: string;
+    org_address?: string;
+  };
+  user: {
+    user_name: string;
+    user_email: string;
+    password: string;
+  };
 }
 
 export interface LoginResponse {
@@ -45,12 +64,21 @@ export class AuthService {
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(LOGIN_URL, { email, password }).pipe(
-      tap(({ token, user }) => {
-        localStorage.setItem(TOKEN_KEY, token);
-        this.token.set(token);
-        this.currentUser.set(user);
-      }),
+      tap((session) => this.startSession(session)),
     );
+  }
+
+  /** Registers a company with its administrator, who is signed in straight away. */
+  register(registration: Registration): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(REGISTER_URL, registration).pipe(
+      tap((session) => this.startSession(session)),
+    );
+  }
+
+  private startSession({ token, user }: LoginResponse) {
+    localStorage.setItem(TOKEN_KEY, token);
+    this.token.set(token);
+    this.currentUser.set(user);
   }
 
   /** Fetches the signed-in user, so a changed role is picked up. */

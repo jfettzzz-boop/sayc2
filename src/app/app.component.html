@@ -25,7 +25,7 @@
               </div>
 
               @if (!isNarrow) {
-                <ion-note>{{ 'welcome_subtitle' | translate }}</ion-note>
+                <ion-note>{{ orgName() ?? ('welcome_subtitle' | translate) }}</ion-note>
               }
               
               @for (p of appPages(); track p.url) {

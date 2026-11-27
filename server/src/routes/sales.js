@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
+import { auditBy } from '../audit.js';
 import { pool, withTransaction } from '../db.js';
 import { HttpError, notFound } from '../errors.js';
 import { ROLE_ADMIN, requireAuth } from '../middleware/auth.js';
@@ -27,7 +28,7 @@ const isAdmin = (user) => user.role_name === ROLE_ADMIN;
  * Registers a sale. Prices come from the database rather than the client, and product rows
  * stay locked until commit, so concurrent sales cannot oversell the same stock.
  */
-async function registerSale(userId, { items, received_pay }) {
+async function registerSale(user, { items, received_pay }) {
   const quantities = new Map();
   for (const { product_id, quantity } of items) {
     quantities.set(product_id, (quantities.get(product_id) ?? 0) + quantity);
@@ -37,8 +38,8 @@ async function registerSale(userId, { items, received_pay }) {
     // ORDER BY gives concurrent sales one lock order, which prevents deadlocks.
     const [products] = await connection.query(
       `SELECT id, product_name, product_sell_price, product_current_stock
-         FROM products WHERE id IN (?) ORDER BY id FOR UPDATE`,
-      [[...quantities.keys()]],
+         FROM products WHERE id IN (?) AND organization_id = ? ORDER BY id FOR UPDATE`,
+      [[...quantities.keys()], user.organization_id],
     );
 
     const found = new Set(products.map((product) => product.id));
@@ -75,9 +76,9 @@ async function registerSale(userId, { items, received_pay }) {
 
     const saleId = randomUUID();
     await connection.query(
-      `INSERT INTO sales (id, user_id, sales_total, sales_received_pay, sales_change)
-       VALUES (?, ?, ?, ?, ?)`,
-      [saleId, userId, totalCents / 100, received_pay, (receivedCents - totalCents) / 100],
+      `INSERT INTO sales (id, organization_id, user_id, sales_total, sales_received_pay, sales_change)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [saleId, user.organization_id, user.id, totalCents / 100, received_pay, (receivedCents - totalCents) / 100],
     );
 
     for (const { product, quantity, subtotalCents } of lines) {
@@ -93,16 +94,27 @@ async function registerSale(userId, { items, received_pay }) {
       );
     }
 
+    await auditBy(connection, user, {
+      table: 'sales',
+      recordId: saleId,
+      action: 'INSERT',
+      after: {
+        sales_total: totalCents / 100,
+        sales_received_pay: received_pay,
+        items: lines.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
+      },
+    });
     return saleId;
   });
 }
 
 async function findSale(saleId, user) {
   const [rows] = await pool.query(
-    `SELECT s.*, u.user_name FROM sales s JOIN users u ON u.id = s.user_id WHERE s.id = ?`,
-    [saleId],
+    `SELECT s.*, u.user_name FROM sales s JOIN users u ON u.id = s.user_id
+      WHERE s.id = ? AND s.organization_id = ?`,
+    [saleId, user.organization_id],
   );
-  // Another employee's sale reads as missing, so ids cannot be probed.
+  // Another employee's or organization's sale reads as missing, so ids cannot be probed.
   if (rows.length === 0 || (!isAdmin(user) && rows[0].user_id !== user.id)) throw notFound('Sale');
 
   const [items] = await pool.query(
@@ -124,9 +136,11 @@ salesRouter.get('/', async (req, res) => {
   const own = !isAdmin(req.user);
   const [rows] = await pool.query(
     `SELECT s.*, u.user_name FROM sales s JOIN users u ON u.id = s.user_id
-     ${own ? 'WHERE s.user_id = ?' : ''}
+     WHERE s.organization_id = ? ${own ? 'AND s.user_id = ?' : ''}
      ORDER BY s.sales_date DESC, s.id LIMIT ? OFFSET ?`,
-    own ? [req.user.id, limit, offset] : [limit, offset],
+    own
+      ? [req.user.organization_id, req.user.id, limit, offset]
+      : [req.user.organization_id, limit, offset],
   );
   res.json(rows);
 });
@@ -136,6 +150,6 @@ salesRouter.get('/:id', async (req, res) => {
 });
 
 salesRouter.post('/', async (req, res) => {
-  const saleId = await registerSale(req.user.id, createSchema.parse(req.body));
+  const saleId = await registerSale(req.user, createSchema.parse(req.body));
   res.status(201).json(await findSale(saleId, req.user));
 });

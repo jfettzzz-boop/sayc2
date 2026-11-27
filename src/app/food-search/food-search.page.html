@@ -37,12 +37,23 @@
       <div class="ion-text-center ion-padding">
         <ion-spinner name="crescent"></ion-spinner>
         <p>{{ 'product.looking' | translate }}</p>
+        @if (waitSeconds() > 0) {
+          <ion-note class="search-wait" color="medium">{{ 'products_page.waiting' | translate: { seconds: waitSeconds() } }}</ion-note>
+        }
       </div>
     } @else if (hasError) {
       <div class="ion-text-center ion-padding">
         <ion-text color="danger">
           <p class="search-error">{{ 'errors.TRY_AGAIN' | translate }}</p>
         </ion-text>
+        <ion-button class="search-retry" [disabled]="waitSeconds() > 0" (click)="retry()">
+          <ion-icon slot="start" name="refresh-outline"></ion-icon>
+          @if (waitSeconds() > 0) {
+            {{ 'products_page.retry_in' | translate: { seconds: waitSeconds() } }}
+          } @else {
+            {{ 'errors.RETRY' | translate }}
+          }
+        </ion-button>
         <ion-button fill="outline" (click)="addManually()">{{ 'products_page.add_manually' | translate }}</ion-button>
       </div>
     } @else if (hasSearched && products.length === 0) {

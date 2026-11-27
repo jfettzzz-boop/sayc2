@@ -68,3 +68,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Database dumps (mysqldump backups) stay on this machine
+database/backup-*.sql

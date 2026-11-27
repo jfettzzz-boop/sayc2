@@ -12,13 +12,15 @@ import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@an
 // Multilanguage end
 
 import { authInterceptor } from './app/auth/auth.interceptor';
+import { connectionInterceptor } from './app/connection/connection.interceptor';
+import { registerServiceWorker } from './app/pwa';
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     
     // Multilanguage Providers
-    provideHttpClient(withInterceptorsFromDi(), withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([authInterceptor, connectionInterceptor])),
     provideTranslateService({
       fallbackLang: 'es',
       loader: provideTranslateHttpLoader({
@@ -31,4 +33,6 @@ bootstrapApplication(AppComponent, {
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
   ],
-});
+})
+  .then(() => registerServiceWorker())
+  .catch((err) => console.error(err));

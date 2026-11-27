@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+
+.mode {
+  margin-bottom: 16px;
+}
+
+.help {
+  margin: 0 0 12px;
+}
+
+.test-accounts {
+  font-size: 0.875rem;
+  color: var(--ion-color-medium-shade, #5f5f5f);
+}
+
+ion-input {
+  margin-bottom: 8px;
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.message ion-icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+.test-connection {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}

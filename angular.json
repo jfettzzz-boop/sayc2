@@ -29,13 +29,23 @@
             "assets": [
               {
                 "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "sql-wasm-browser.wasm",
+                "input": "node_modules/sql.js/dist",
+                "output": "assets/sqljs"
               }
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
             "scripts": [],
-            "browser": "src/main.ts"
+            "browser": "src/main.ts",
+            "allowedCommonJsDependencies": ["sql.js"]
           },
           "configurations": {
             "production": {

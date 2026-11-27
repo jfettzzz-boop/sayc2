@@ -1,10 +1,18 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
 import { provideTranslateService } from '@ngx-translate/core';
 
-import { FoodSearchPage, draftFromOpenFoodFacts } from './food-search.page';
+import { FoodSearchPage, SEARCH_INTERVAL_MS, SEARCH_URL, draftFromOpenFoodFacts, legacySearchUrl, normalizeProduct, retryAfterMs } from './food-search.page';
+
+const isSearch = (r: any) => r.url.startsWith(SEARCH_URL);
+const isLegacy = (r: any) => r.url.startsWith('/api/cgi/search.pl');
+/** Both searches failing, as a search counts as failed only then. */
+const failBoth = (http: HttpTestingController, status = 503, headers: Record<string, string> = {}) => {
+  http.expectOne(isSearch).flush(null, { status, statusText: 'x', headers });
+  http.expectOne(isLegacy).flush(null, { status, statusText: 'x', headers });
+};
 
 const OFF_PRODUCT = {
   code: '3017620422003',
@@ -39,6 +47,36 @@ describe('draftFromOpenFoodFacts', () => {
     });
     expect(draft).toEqual({ name: '', barcode: '', brand: '', description: '', imageUrl: '' });
     expect(draftFromOpenFoodFacts({ image_front_small_url: 'javascript:alert(1)' }).imageUrl).toBe('');
+  });
+});
+
+describe('normalizeProduct', () => {
+  it('turns the search service brand list into text, without language prefixes', () => {
+    expect(normalizeProduct({ code: '1', brands: ['xx:El Corte Ingles', 'Hacendado'] }).brands).toBe('El Corte Ingles, Hacendado');
+    expect(normalizeProduct({ _id: '2', brands: 'Ferrero, Nutella' })).toEqual({ _id: '2', code: '2', brands: 'Ferrero, Nutella' });
+    expect(draftFromOpenFoodFacts(normalizeProduct({ brands: ['xx:coca'] })).brand).toBe('coca');
+  });
+
+  it('calls search.pl directly from the installed app and through the proxy in a browser', () => {
+    expect(legacySearchUrl(true)).toBe('https://world.openfoodfacts.org/cgi/search.pl');
+    expect(legacySearchUrl(false)).toBe('/api/cgi/search.pl');
+  });
+});
+
+describe('retryAfterMs', () => {
+  const withHeader = (value: string) =>
+    new HttpErrorResponse({ status: 429, headers: new HttpHeaders({ 'Retry-After': value }) });
+
+  it('reads seconds or a date, and caps the wait', () => {
+    expect(retryAfterMs(withHeader('12'))).toBe(12000);
+    expect(retryAfterMs(withHeader(new Date(10000).toUTCString()), 0)).toBe(10000);
+    expect(retryAfterMs(withHeader('3600'))).toBe(60000);
+  });
+
+  it('is 0 with no usable header', () => {
+    expect(retryAfterMs(new HttpErrorResponse({ status: 503 }))).toBe(0);
+    expect(retryAfterMs(withHeader('soon'))).toBe(0);
+    expect(retryAfterMs(new Error('x'))).toBe(0);
   });
 });
 
@@ -112,7 +150,7 @@ describe('FoodSearchPage', () => {
     try {
       page.onSearchChange({ detail: { value: 'nutella' } });
       vi.advanceTimersByTime(800);
-      http.expectOne((r) => r.url.startsWith('/api/cgi/search.pl')).flush(null, { status: 503, statusText: 'x' });
+      failBoth(http);
       expect(page.hasError).toBe(true);
       expect(page.isLoading).toBe(false);
     } finally {
@@ -125,14 +163,88 @@ describe('FoodSearchPage', () => {
     try {
       page.onSearchChange({ detail: { value: 'nutella' } });
       vi.advanceTimersByTime(800);
-      const req = http.expectOne((r) => r.url.startsWith('/api/cgi/search.pl'));
+      const req = http.expectOne(isSearch);
+      expect(req.request.url).toContain('q=nutella');
       expect(req.request.headers.has('User-Agent')).toBe(false);
       expect(req.request.headers.has('Authorization')).toBe(false);
-      req.flush({ products: [OFF_PRODUCT] });
-      expect(page.products.length).toBe(1);
+      req.flush({ hits: [{ ...OFF_PRODUCT, brands: ['Ferrero', 'Nutella'] }] });
+      http.expectNone(isLegacy);
+      expect(page.products).toEqual([OFF_PRODUCT]);
       expect(page.hasError).toBe(false);
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('falls back to search.pl when the search service fails', async () => {
+    vi.useFakeTimers();
+    try {
+      page.onSearchChange({ detail: { value: 'nutella' } });
+      vi.advanceTimersByTime(800);
+      http.expectOne(isSearch).flush(null, { status: 503, statusText: 'x' });
+      const legacy = http.expectOne(isLegacy);
+      expect(legacy.request.headers.has('Authorization')).toBe(false);
+      legacy.flush({ products: [OFF_PRODUCT] });
+      expect(page.products).toEqual([OFF_PRODUCT]);
+      expect(page.hasError).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  describe('spacing and retrying searches', () => {
+    const search = isSearch;
+
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => {
+      fixture.destroy();
+      vi.useRealTimers();
+    });
+
+    it('holds a search sent too soon after another until the interval is over', () => {
+      page.onSearchChange({ detail: { value: 'nutella' } });
+      vi.advanceTimersByTime(800);
+      http.expectOne(search).flush({ hits: [OFF_PRODUCT] });
+
+      page.onSearchChange({ detail: { value: 'leche' } });
+      vi.advanceTimersByTime(800);
+      expect(page.isLoading).toBe(true);
+      expect(page.waitSeconds()).toBeGreaterThan(0);
+      http.expectNone(search);
+
+      vi.advanceTimersByTime(SEARCH_INTERVAL_MS - 800);
+      http.expectOne((r) => search(r) && r.url.includes('leche')).flush({ hits: [] });
+      expect(page.isLoading).toBe(false);
+    });
+
+    it('retries the same search once the wait is over, not before', () => {
+      page.onSearchChange({ detail: { value: 'nutella' } });
+      vi.advanceTimersByTime(800);
+      failBoth(http);
+      expect(page.hasError).toBe(true);
+
+      page.retry();
+      vi.advanceTimersByTime(0);
+      http.expectNone(search);
+
+      vi.advanceTimersByTime(SEARCH_INTERVAL_MS);
+      expect(page.waitSeconds()).toBe(0);
+      page.retry();
+      http.expectOne((r) => search(r) && r.url.includes('nutella')).flush({ hits: [OFF_PRODUCT] });
+      expect(page.hasError).toBe(false);
+      expect(page.products.length).toBe(1);
+    });
+
+    it('waits as long as the server asks when it is busy', () => {
+      page.onSearchChange({ detail: { value: 'nutella' } });
+      vi.advanceTimersByTime(800);
+      http.expectOne(search).flush(null, { status: 429, statusText: 'x', headers: { 'Retry-After': '20' } });
+      http.expectOne(isLegacy).flush(null, { status: 503, statusText: 'x' });
+
+      vi.advanceTimersByTime(SEARCH_INTERVAL_MS);
+      expect(page.waitSeconds()).toBeGreaterThan(10);
+      vi.advanceTimersByTime(20000);
+      expect(page.waitSeconds()).toBe(0);
+    });
   });
 });

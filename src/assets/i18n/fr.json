@@ -33,6 +33,82 @@
     "logout_confirm_message": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "session_expired_title": "Session terminée",
     "session_expired_message": "Une nouvelle session a été ouverte sur un autre appareil. Votre session actuelle est terminée.",
+    "landing": {
+        "sign_in": "Se connecter",
+        "eyebrow": "Caisse et inventaire pour les petits commerces",
+        "headline": "Vendez, réapprovisionnez et suivez votre magasin au même endroit",
+        "lead": "SAYC réunit l'encaissement, la gestion des stocks et votre catalogue de produits, pour que votre équipe passe moins de temps sur la paperasse et plus avec ses clients.",
+        "register_company": "Inscrire votre entreprise",
+        "have_account": "J'ai déjà un compte",
+        "features_title": "Tout ce dont votre comptoir a besoin",
+        "features": {
+            "checkout": {
+                "title": "Encaissement rapide",
+                "text": "Scannez ou cherchez les produits, encaissez et obtenez la monnaie à rendre. Le stock se met à jour à chaque vente."
+            },
+            "inventory": {
+                "title": "Stock maîtrisé",
+                "text": "Enregistrez les entrées, les sorties et la démarque, et voyez en un coup d’œil ce qui manque."
+            },
+            "catalog": {
+                "title": "Catalogue prêt à l’emploi",
+                "text": "Trouvez des produits dans Open Food Facts et ajoutez-les avec leur nom, leur marque et leur photo déjà remplis."
+            },
+            "roles": {
+                "title": "Des rôles pour votre équipe",
+                "text": "Les administrateurs gèrent les utilisateurs et voient toutes les ventes ; les employés vendent et gèrent le stock."
+            },
+            "history": {
+                "title": "Historique complet",
+                "text": "Chaque modification est enregistrée avec son auteur et sa date, y compris chaque prix de vos produits."
+            },
+            "offline": {
+                "title": "Fonctionne sur l’appareil",
+                "text": "Essayez tout sur votre téléphone ou ordinateur sans serveur, puis connectez-vous à un serveur quand vous serez prêt."
+            }
+        },
+        "steps_title": "Opérationnel en trois étapes",
+        "steps": {
+            "register": {
+                "title": "Inscrivez votre entreprise",
+                "text": "Saisissez les informations de votre commerce et créez le compte administrateur."
+            },
+            "setup": {
+                "title": "Ajoutez produits et personnel",
+                "text": "Constituez votre catalogue, saisissez le stock initial et invitez vos employés."
+            },
+            "sell": {
+                "title": "Commencez à vendre",
+                "text": "Encaissez au comptoir et suivez ventes et stock depuis le tableau de bord."
+            }
+        },
+        "closing_title": "Prêt à organiser votre magasin ?",
+        "closing_text": "L'inscription prend quelques minutes. Chaque entreprise ne voit que ses propres données."
+    },
+    "org_register": {
+        "title": "Inscrire votre entreprise",
+        "subtitle": "Créez votre commerce et son compte administrateur.",
+        "back": "Retour",
+        "company": "Entreprise",
+        "org_name": "Nom du commerce",
+        "org_email": "E-mail du commerce",
+        "org_tax_id": "Numéro fiscal",
+        "org_phone": "Téléphone",
+        "org_address": "Adresse",
+        "optional": "Facultatif",
+        "admin": "Administrateur",
+        "admin_hint": "Ce compte gère l’entreprise. Vous pourrez ajouter des employés plus tard.",
+        "user_name": "Nom complet",
+        "confirm": "Confirmer le mot de passe",
+        "password_hint": "Au moins {{min}} caractères",
+        "password_short": "Le mot de passe doit contenir au moins {{min}} caractères",
+        "mismatch": "Les mots de passe ne correspondent pas",
+        "required": "Ce champ est obligatoire",
+        "invalid": "Certaines informations ne sont pas valides. Vérifiez le formulaire et réessayez.",
+        "submit": "Inscrire l'entreprise",
+        "have_account": "Déjà inscrit ?",
+        "no_account": "Nouveau sur SAYC ?"
+    },
     "charge": {
         "title": "Encaisser",
         "search": "Rechercher par nom ou code-barres",
@@ -81,6 +157,8 @@
         "recent_adjustments": "Ajustements de stock récents"
     },
     "products_page": {
+        "waiting": "Attente de {{seconds}} s pour ne pas surcharger le service de recherche",
+        "retry_in": "Réessayer dans {{seconds}} s",
         "title": "Produits",
         "tab_search": "Rechercher",
         "tab_add": "Ajouter",
@@ -144,6 +222,19 @@
         "history": "Ajustements récents",
         "no_history": "Ce produit n'a aucun ajustement enregistré.",
         "adj_types": {"entrada":"Entrée","salida":"Sortie","correccion":"Correction","merma":"Perte"}
+    },
+    "connection": {
+        "title": "Connexion",
+        "mode_local": "Sur cet appareil",
+        "mode_server": "Serveur",
+        "local_help": "Les données sont stockées dans l'application et fonctionnent sans internet. Elles ne sont pas partagées avec d'autres appareils ni avec le serveur.",
+        "local_accounts": "Utilisateurs de test : admin@sayc.com et empleado@sayc.com, avec le mot de passe admin123.",
+        "server_help": "Les données sont sur un serveur, partagées entre les appareils. Une connexion est nécessaire.",
+        "server_url": "Adresse du serveur",
+        "invalid_url": "Saisissez une adresse commençant par http:// ou https://.",
+        "test": "Tester la connexion",
+        "test_ok": "Connexion réussie.",
+        "test_failed": "Connexion impossible. Vérifiez l'adresse, que le serveur est démarré et que son CORS_ORIGINS autorise cette application."
     },
     "common": {
         "cancel": "Annuler",
