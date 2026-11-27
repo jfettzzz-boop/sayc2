@@ -1,0 +1,37 @@
+.results-list {
+  margin-bottom: 8px;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.qty {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.line-subtotal {
+  font-weight: 600;
+  margin-inline-start: 8px;
+}
+
+.charge-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.charge-error {
+  text-align: center;
+  margin: 0;
+}

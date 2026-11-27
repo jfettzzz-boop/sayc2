@@ -231,7 +231,9 @@
         "AUTH_WEAK_PASSWORD": "Contraseña inválida.",
         "GOOGLE_AUTH_FAILED": "Fallo en la autenticación de Google",
         "NOT_FOUND": "Página no encontrada",
-        "BACK": "Regresar"
+        "BACK": "Regresar",
+        "BARCODE_ALREADY_REGISTERED": "Ya existe un producto con ese código de barras.",
+        "PRODUCT_IN_USE": "El producto tiene ventas o ajustes registrados y no puede eliminarse."
     },
     "voting": {
         "select_template_title": "Selecciona una plantilla",
@@ -373,5 +375,60 @@
         "confirm": "Confirmar",
         "weak_password": "La contraseña no cumple con los requisitos mínimos de seguridad",
         "user_not_found": "Usuario no encontrado"
+    },
+    "nav": {
+        "sell": "Cobro",
+        "products": "Productos"
+    },
+    "products": {
+        "title": "Productos",
+        "new": "Nuevo",
+        "search_placeholder": "Buscar por nombre, marca o código",
+        "low_stock_only": "Solo stock bajo",
+        "stock": "Stock",
+        "empty": "No se encontraron productos.",
+        "load_error": "No se pudieron cargar los productos.",
+        "invalid_data": "Revisa los datos del producto.",
+        "name": "Nombre",
+        "barcode": "Código de barras",
+        "brand": "Marca",
+        "sell_price": "Precio de venta",
+        "costs": "Costo",
+        "min_stock": "Stock mínimo",
+        "current_stock": "Stock inicial",
+        "image_url": "URL de imagen",
+        "description": "Descripción",
+        "edit": "Editar producto",
+        "delete": "Eliminar producto",
+        "confirm_delete": "¿Eliminar este producto? No se puede deshacer.",
+        "adjust_title": "Ajuste de inventario",
+        "adjust_stock": "Ajustar stock",
+        "adjust_type": "Tipo de ajuste",
+        "new_amount": "Nueva cantidad",
+        "motive": "Motivo",
+        "type_entrada": "Entrada",
+        "type_salida": "Salida",
+        "type_conteo": "Conteo físico"
+    },
+    "pos": {
+        "title": "Cobro",
+        "tab_sell": "Venta",
+        "tab_history": "Historial",
+        "search_placeholder": "Buscar producto para agregar",
+        "out_of_stock": "Agotado",
+        "cart_empty": "El carrito está vacío. Busca un producto para empezar.",
+        "stock": "Stock",
+        "clear_cart": "Vaciar carrito",
+        "total": "Total",
+        "change": "Cambio",
+        "received": "Efectivo recibido",
+        "charge": "Cobrar",
+        "sale_completed": "Venta registrada",
+        "sale_detail": "Detalle de venta",
+        "insufficient_payment": "El pago no cubre el total.",
+        "insufficient_stock": "No hay suficiente stock para alguno de los productos.",
+        "product_not_found": "Un producto de la venta ya no existe.",
+        "invalid_data": "Revisa los datos de la venta.",
+        "no_sales": "Aún no hay ventas registradas."
     }
 }

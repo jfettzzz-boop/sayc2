@@ -35,18 +35,27 @@ export class AuthService {
   private readonly http = inject(HttpClient);
 
   readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
+  readonly user = signal<AuthUser | null>(null);
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(LOGIN_URL, { email, password }).pipe(
-      tap(({ token }) => {
+      tap(({ token, user }) => {
         localStorage.setItem(TOKEN_KEY, token);
         this.token.set(token);
+        this.user.set(user);
       }),
     );
   }
 
   me(): Observable<AuthUser> {
-    return this.http.get<AuthUser>('/api/v1/auth/me');
+    return this.http.get<AuthUser>('/api/v1/auth/me').pipe(
+      tap((user) => this.user.set(user)),
+    );
+  }
+
+  /** Restores the user profile when a token already exists (app reload). */
+  loadUser(): Observable<AuthUser> {
+    return this.me();
   }
 
   /** True while there is an unexpired token. An expired or unreadable one is discarded. */
@@ -59,5 +68,6 @@ export class AuthService {
   clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     this.token.set(null);
+    this.user.set(null);
   }
 }

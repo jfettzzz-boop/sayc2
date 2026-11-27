@@ -1,13 +1,16 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonSearchbar, IonList, IonItem, IonThumbnail, IonLabel, IonNote, IonSpinner, IonIcon, IonButton } from '@ionic/angular';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, finalize, catchError } from 'rxjs/operators';
 
 // Multilanguage
 import { TranslatePipe } from '@ngx-translate/core';
+
+import { ProductsService } from '../products/products.service';
 // Multilanguage end
 
 @Component({
@@ -44,7 +47,10 @@ export class FoodSearchPage implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private searchSubscription!: Subscription;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
+  private readonly productsService = inject(ProductsService);
 
   ngOnInit() {
     this.searchSubscription = this.searchSubject.pipe(
@@ -118,13 +124,13 @@ export class FoodSearchPage implements OnInit, OnDestroy {
   }
 
   addToInventory(product: any) {
-    const productData = {
-      name: product.product_name || 'Producto sin nombre',
-      brand: product.brands || 'Desconocida',
-      quantity: product.quantity || 'N/D',
-      code: product.code || product._id || '',
-      image: product.image_front_small_url || ''
-    };
-    alert(`Producto: "${productData.name}" añadido al inventario.`);
+    this.productsService.draft.set({
+      product_barcode: product.code || product._id || '',
+      product_name: product.product_name || product.abbreviated_product_name || 'Producto sin nombre',
+      product_brand: (product.brands || 'Desconocida').split(',')[0].trim(),
+      product_description: product.quantity || '',
+      product_img_url: product.image_front_small_url || product.image_front_url || '',
+    });
+    this.router.navigateByUrl('/products');
   }
 }
